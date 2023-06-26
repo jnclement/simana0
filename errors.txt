@@ -1,0 +1,7 @@
+/cvmfs/sphenix.sdcc.bnl.gov/gcc-12.1.0/opt/sphenix/core/binutils/2.37-355ed/x86_64-centos7/bin/ld: ./.libs/libmdctreemaker.so: undefined reference to `PHG4TruthInfoContainer::isEmbeded(int) const'
+/cvmfs/sphenix.sdcc.bnl.gov/gcc-12.1.0/opt/sphenix/core/binutils/2.37-355ed/x86_64-centos7/bin/ld: ./.libs/libmdctreemaker.so: undefined reference to `PHG4TruthInfoContainer::GetParticle(int)'
+/cvmfs/sphenix.sdcc.bnl.gov/gcc-12.1.0/opt/sphenix/core/binutils/2.37-355ed/x86_64-centos7/bin/ld: ./.libs/libmdctreemaker.so: undefined reference to `typeinfo for JetMap'
+/cvmfs/sphenix.sdcc.bnl.gov/gcc-12.1.0/opt/sphenix/core/binutils/2.37-355ed/x86_64-centos7/bin/ld: ./.libs/libmdctreemaker.so: undefined reference to `typeinfo for PHG4TruthInfoContainer'
+collect2: error: ld returned 1 exit status
+make[1]: *** [testexternals] Error 1
+make: *** [all] Error 2
