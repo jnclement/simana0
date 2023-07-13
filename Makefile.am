@@ -10,7 +10,7 @@ AM_LDFLAGS = \
   -L$(OFFLINE_MAIN)/lib
 
 pkginclude_HEADERS = \
-  MDCTreeMaker_mbd.h
+  MDCTreeMaker.h
 
 ROOTDICTS = 
 
@@ -25,16 +25,17 @@ libmdctreemaker_io_la_SOURCES = \
   $(ROOTDICTS) 
 
 libmdctreemaker_la_SOURCES = \
-  MDCTreeMaker_mbd.cc
+  MDCTreeMaker.cc
 
 libmdctreemaker_io_la_LIBADD = \
-  -lphool -lSubsysReco -lbbc_io
+  -lphool -lSubsysReco -lbbc_io -ljetbase
 
 libmdctreemaker_la_LIBADD = \
   libmdctreemaker_io.la \
   -lcalo_io \
-  -lSubsysReco -lphg4hit -lg4jets_io -lffaobjects -lbbc_io
-
+  -lSubsysReco -lphg4hit -lffaobjects -lbbc_io \
+  -lcalowaveformsim -ljetbase
+#-lg4jets_io
 %_Dict.cc: %.h %LinkDef.h
 	rootcint -f $@ @CINTDEFS@ $(DEFAULT_INCLUDES) $(AM_CPPFLAGS) $^
 
