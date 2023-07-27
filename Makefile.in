@@ -127,7 +127,7 @@ am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(pcmdir)" \
 	"$(DESTDIR)$(pkgincludedir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libmdctreemaker_la_DEPENDENCIES = libmdctreemaker_io.la
-am_libmdctreemaker_la_OBJECTS = MDCTreeMaker_mbd.lo
+am_libmdctreemaker_la_OBJECTS = MDCTreeMaker.lo
 libmdctreemaker_la_OBJECTS = $(am_libmdctreemaker_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -378,7 +378,7 @@ AM_LDFLAGS = \
   -L$(OFFLINE_MAIN)/lib
 
 pkginclude_HEADERS = \
-  MDCTreeMaker_mbd.h
+  MDCTreeMaker.h
 
 ROOTDICTS = 
 pcmdir = $(libdir)
@@ -391,15 +391,16 @@ libmdctreemaker_io_la_SOURCES = \
   $(ROOTDICTS) 
 
 libmdctreemaker_la_SOURCES = \
-  MDCTreeMaker_mbd.cc
+  MDCTreeMaker.cc
 
 libmdctreemaker_io_la_LIBADD = \
-  -lphool -lSubsysReco -lbbc_io
+  -lphool -lSubsysReco -lbbc_io -ljetbase
 
 libmdctreemaker_la_LIBADD = \
   libmdctreemaker_io.la \
   -lcalo_io \
-  -lSubsysReco -lphg4hit -lg4jets_io -lffaobjects -lbbc_io
+  -lSubsysReco -lphg4hit -lffaobjects -lbbc_io \
+  -lcalowaveformsim -ljetbase
 
 BUILT_SOURCES = testexternals.cc
 testexternals_io_SOURCES = testexternals.cc
@@ -510,7 +511,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MDCTreeMaker_mbd.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MDCTreeMaker.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testexternals.Po@am__quote@
 
 .cc.o:
@@ -940,7 +941,7 @@ uninstall-am: uninstall-libLTLIBRARIES uninstall-nobase_dist_pcmDATA \
 	uninstall-am uninstall-libLTLIBRARIES \
 	uninstall-nobase_dist_pcmDATA uninstall-pkgincludeHEADERS
 
-
+#-lg4jets_io
 %_Dict.cc: %.h %LinkDef.h
 	rootcint -f $@ @CINTDEFS@ $(DEFAULT_INCLUDES) $(AM_CPPFLAGS) $^
 

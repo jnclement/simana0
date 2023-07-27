@@ -4,10 +4,9 @@
 #include <fun4all/SubsysReco.h>
 
 #include <gsl/gsl_rng.h>
-
 #include <string>
 #include <vector>
-
+#include <calowaveformsim/WaveformContainerv1.h>
 #include "TTree.h"
 #include "TFile.h"
 
@@ -43,12 +42,22 @@ class MDCTreeMaker : public SubsysReco
   TFile *_f;
   TTree *_tree;
   std::string _foutname;
-
-  //int truthjet_n;
+  /*
+  int emsize;
+  int hisize;
+  int hosize;
+  std::vector<unsigned int> emkey;
+  std::vector<unsigned int> hikey;
+  std::vector<unsigned int> hokey;
+  std::vector<float> emwf;
+  std::vector<float> hiwf;
+  std::vector<float> howf;
+  int truthjet_n;
   int sectorem;
   int sectorih;
   int sectoroh;
-  int truthjet_n;
+  */
+  /*
   float truthjet_pt[1000];
   float truthjet_et[1000];
   float truthjet_ph[1000];
@@ -60,7 +69,9 @@ class MDCTreeMaker : public SubsysReco
   float truthpar_px[100000];
   float truthpar_py[100000];
   float truthpar_pz[100000];
-  int truthpar_n1;
+  */
+  //int truthpar_n1;
+  /*
   float truthpar_pt[100000];
   float truthpar_et[100000];
   float truthpar_ph[100000];
@@ -102,6 +113,29 @@ class MDCTreeMaker : public SubsysReco
   float bctet[100];
   float bctph[100];
   float bcten[100];
+  */
+  int emfemevt[48];
+  //int empktfem[128];
+  int emfemclk[48];
+  //int emxmtevt;
+  //int emxmtclk[128];
+  int hofemevt[12];
+  //int hopktfem[32];
+  int hofemclk[12];
+  //int hoxmtevt[32];
+  //int hoxmtclk[32];
+  int hifemevt[12];
+  //int hipktfem[32];
+  int hifemclk[12];
+  //int hixmtevt[32];
+  //int hixmtclk[32];
+  int mbfemevt[4];
+  //int mbpktfem[2];
+  int mbfemclk[4];
+  //int mbxmtevt[2];
+  //int mbxmtclk[2];
+  //int femit[128];
+  //int evtit[128];
 };
 
 #endif // MDCTREEMAKER
