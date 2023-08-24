@@ -98,6 +98,21 @@ class MDCTreeMaker : public SubsysReco
   float clustowet[10000];
   float clustowph[10000];
   int nclus;
+  int npart;
+  int ncoll;
+  float bimp;
+  int bestclus;
+  int bcnt;
+  int bcmt;
+  float bctet[100];
+  float bctph[100];
+  float bcten[100];
+  float qsum;
+  int npmt;
+  float mbdsumE;
+  float sumoh;
+  float sumih;
+  float sumem;
 };
 
 #endif // MDCTREEMAKER

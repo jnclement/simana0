@@ -494,7 +494,7 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	  TowerInfov1 *tower = towersEM->get_tower_at_channel(i);
 	  int key = towersEM->encode_key(i);
 	  int time = towersEMuc->get_tower_at_channel(i)->get_time();
-	  if(time > 7 || time < 4) continue;
+	  if(time > 10 || time < 7) continue;
 	  int etabin = towersEM->getTowerEtaBin(key);
 	  int phibin = towersEM->getTowerPhiBin(key);
 	  if(etabin == 37 && phibin == 0) continue;

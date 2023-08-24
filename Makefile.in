@@ -400,7 +400,7 @@ libmdctreemaker_la_LIBADD = \
   libmdctreemaker_io.la \
   -lcalo_io \
   -lSubsysReco -lphg4hit -lffaobjects -lbbc_io \
-  -lcalowaveformsim -ljetbase
+  -lcalowaveformsim -ljetbase -lglobalvertex
 
 BUILT_SOURCES = testexternals.cc
 testexternals_io_SOURCES = testexternals.cc

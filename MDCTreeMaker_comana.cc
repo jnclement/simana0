@@ -69,7 +69,10 @@ int MDCTreeMaker::Init(PHCompositeNode *topNode)
   _tree->Branch("qsum",&qsum,"qsum/F");
   _tree->Branch("npmt",&npmt,"npmt/I");
   _tree->Branch("mbdsumE",&mbdsumE,"mbdsumE/F");
-   _tree->Branch("bimp",&bimp,"bimp/F");
+  _tree->Branch("bimp",&bimp,"bimp/F");
+  _tree->Branch("sumem",&sumem,"sumem/F");
+  _tree->Branch("sumoh",&sumoh,"sumoh/F");
+  _tree->Branch("sumih",&sumih,"sumih/F");
   /*
   _tree->Branch("truthjet_n",&truthjet_n,"truthjet_n/I");
   _tree->Branch("truthjet_pt",truthjet_pt,"truthjet_pt[truthjet_n]/F");
@@ -179,6 +182,9 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
   qsum = 0;
   npmt = 0;
   mbdsumE = 0;
+  sumoh = 0;
+  sumih = 0;
+  sumem = 0;
   for(int i=0; i<sizeof(emcalen)/sizeof(emcalen[0]); i++)
     {
       emcalen[i] = 0;
@@ -250,8 +256,8 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
       bimp = event_header->get_floatval("bimp");    
       //std::cout << " npart / ncoll / bimp = " << npart << " / " << ncoll << " / " << bimp << std::endl;
     }
-  _tree->Fill();
-  return Fun4AllReturnCodes::EVENT_OK;
+  //_tree->Fill();
+  //return Fun4AllReturnCodes::EVENT_OK;
   {
     RawTowerContainer *towersEM = findNode::getClass<RawTowerContainer>(topNode, "TOWER_CALIB_CEMC");
   RawTowerContainer *towersIH = findNode::getClass<RawTowerContainer>(topNode, "TOWER_CALIB_HCALIN");
@@ -272,6 +278,7 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	  float eta = tower_geom->get_eta();
 	  //cout << "it: " << sector << " eta: " << eta << " eng: " << tower->get_energy() << endl;
 	  emcalen[sectorem] = tower->get_energy();
+	  sumem += tower->get_energy();
 	  emcalet[sectorem] = eta;
 	  emcalph[sectorem] = tower_geom->get_phi();
 	  sectorem++;
@@ -288,6 +295,7 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	  RawTowerGeom *tower_geom = geomIH->get_tower_geometry(tower->get_key());
 	  float eta = tower_geom->get_eta();
 	  ihcalen[sectorih] = tower->get_energy();
+	  sumih += tower->get_energy();
 	  ihcalet[sectorih] = eta;
 	  ihcalph[sectorih] = tower_geom->get_phi();
 	  sectorih++;
@@ -304,6 +312,7 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	  RawTowerGeom *tower_geom = geomOH->get_tower_geometry(tower->get_key());
 
 	  ohcalen[sectoroh] = tower->get_energy();
+	  sumoh += tower->get_energy();
 	  ohcalet[sectoroh] = tower_geom->get_eta();
 	  ohcalph[sectoroh] = tower_geom->get_phi();
 	  sectoroh++;
@@ -311,6 +320,8 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
     }
   
   }
+  _tree->Fill();
+  return Fun4AllReturnCodes::EVENT_OK;
   //vector<int> pibarcodes;
   
   /*

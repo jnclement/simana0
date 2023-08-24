@@ -8,7 +8,8 @@
 #include <calobase/RawTowerGeomContainer.h>
 #include <calobase/TowerInfoContainer.h>
 #include <calobase/TowerInfoContainerv1.h>
-
+#include <globalvertex/GlobalVertexMap.h>
+#include <globalvertex/GlobalVertex.h>
 #include <calowaveformsim/WaveformContainerv1.h>
 
 #include <g4main/PHG4TruthInfoContainer.h>
@@ -62,11 +63,6 @@ MDCTreeMaker::~MDCTreeMaker()
 //____________________________________________________________________________..
 int MDCTreeMaker::Init(PHCompositeNode *topNode)
 {
-
-
-  hotfile = TFile::Open("/sphenix/user/jocl/projects/sandbox/run/hot_towers_21518_1.root");
-  hottree = hotfile->Get<TTree>("T_hot_tower");
-    
   _f = new TFile( _foutname.c_str(), "RECREATE");
 
   std::cout << " making a file = " <<  _foutname.c_str() << " , _f = " << _f << std::endl;
@@ -116,12 +112,14 @@ int MDCTreeMaker::Init(PHCompositeNode *topNode)
   _tree->Branch("reco_jet_pt",reco_jet_pt,"reco_jet_pt[reco_jet_n]/F");
   _tree->Branch("reco_jet_et",reco_jet_et,"reco_jet_et[reco_jet_n]/F");
   _tree->Branch("reco_jet_ph",reco_jet_ph,"reco_jet_ph[reco_jet_n]/F");
+  */
   _tree->Branch("truthpar_n",&truthpar_n,"truthpar_n/I");
-  _tree->Branch("truthpar_pt",truthpar_pt,"truthpar_pt[truthpar_n]/F");
+  _tree->Branch("truthpar_e",truthpar_e,"truthpar_e[truthpar_n]/F");
   _tree->Branch("truthpar_et",truthpar_et,"truthpar_et[truthpar_n]/F");
   _tree->Branch("truthpar_ph",truthpar_ph,"truthpar_ph[truthpar_n]/F");
+  _tree->Branch("truthpar_em",truthpar_em,"truthpar_em[truthpar_n]/I");
+  /*
   _tree->Branch("truthpar_id",truthpar_id,"truthpar_id[truthpar_n]/I");
-  */
   // _tree->Branch("truthpar_n",&truthpar_n1,"truthpar_n1/I");
   // _tree->Branch("truthpar_pt",truthpar_pt1,"truthpar_pt1[truthpar_n1]/F");
   // _tree->Branch("truthpar_et",truthpar_et1,"truthpar_et1[truthpar_n1]/F");
@@ -147,9 +145,9 @@ int MDCTreeMaker::Init(PHCompositeNode *topNode)
    _tree->Branch("emcalph",emcalph,"emcalph[sectorem]/I");
    _tree->Branch("ihcalph",ihcalph,"ihcalph[sectorih]/I");
    _tree->Branch("ohcalph",ohcalph,"ihcalph[sectoroh]/I");
-   _tree->Branch("mbdtype",mbdtype,"mbdtype[sectormb]/I");
-   _tree->Branch("mbdside",mbdside,"mbdside[sectormb]/I");
-   _tree->Branch("mbdchan",mbdchan,"mbdchan[sectormb]/I");
+   //_tree->Branch("mbdtype",mbdtype,"mbdtype[sectormb]/I");
+   //_tree->Branch("mbdside",mbdside,"mbdside[sectormb]/I");
+   //_tree->Branch("mbdchan",mbdchan,"mbdchan[sectormb]/I");
   // _tree->Branch("nclus",&nclus,"nclus/I");
   // _tree->Branch("prob",prob,"prob[nclus]/F");
   // _tree->Branch("chi2",chi2,"chi2[nclus]/F");
@@ -161,15 +159,18 @@ int MDCTreeMaker::Init(PHCompositeNode *topNode)
   //_tree->Branch("clustowE",clustowE,"clustowE[cluster_ntower[nclus]]/F");
   //_tree->Branch("clustowet",clustowet,"clustowet[cluster_ntower[nclus]]/F");
   //_tree->Branch("clustowph",clustowph,"clustowph[cluster_ntower[nclus]]/F");
-  // _tree->Branch("npart",&npart,"npart/I");
-  // _tree->Branch("ncoll",&ncoll,"ncoll/I");
-  // _tree->Branch("bimp",&bimp,"bimp/F");
+  _tree->Branch("npart",&npart,"npart/I");
+  _tree->Branch("ncoll",&ncoll,"ncoll/I");
+  _tree->Branch("bimp",&bimp,"bimp/F");
+  _tree->Branch("zvtx",&zvtx,"zvtx/F");
+  /*
   // _tree->Branch("bestclus",&bestclus,"bestclus/I");
   // _tree->Branch("bcnt",&bcnt,"bcnt/I");
   // _tree->Branch("bcmt",&bcmt,"bcmt/I");
   // _tree->Branch("bctet",bctet,"bctet[bcnt]/F");
   // _tree->Branch("bctph",bctph,"bctph[bcnt]/F");
   // _tree->Branch("bcten",bcten,"bcten[bcnt]/F");
+  */
   return Fun4AllReturnCodes::EVENT_OK;
 }
 
@@ -210,23 +211,6 @@ void climbup(int depth, HepMC::GenVertex::particle_iterator part)
 //____________________________________________________________________________..
 int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 {
-  int hotet;
-  int hotph;
-  int hotin;
-  hottree->SetBranchAddress("hot_eta",&hotet);
-  hottree->SetBranchAddress("hot_phi",&hotph);
-  hottree->SetBranchAddress("index",&hotin);
-  int hoteta[1000];
-  int hotpha[1000];
-  int hotina[1000];
-  int hots = hottree->GetEntries();
-  for(int i=0; i<hots; ++i)
-    {
-      hottree->GetEntry(i);
-      hoteta[i] = hotet;
-      hotpha[i] = hotph;
-      hotina[i] = hotin;
-    }
   /*
   emsize = 0;
   hisize = 0;
@@ -265,14 +249,14 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
   // here is where the code goes 
 //  truthjet_n = 0;
 //  reco_jet_n = 0;
-//  truthpar_n = 0;
+  truthpar_n = 0;
 //   truthpar_n1 = 0;
-   sectorem = 0;
-   sectorih = 0;
-   sectoroh = 0;
-   sectormb = 0;
+  sectorem = 0;
+  sectorih = 0;
+  sectoroh = 0;
+  // sectormb = 0;
 //   nclus = 0;
-   for(int i=0; i<sizeof(emcalen)/sizeof(emcalen[0]); i++)
+   for(int i=0; i<100000; i++)
      {
        emcalen[i] = -1;
        emcalet[i] = 0;
@@ -284,22 +268,22 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
        ohcalet[i] = 0;
        ohcalph[i] = 0;
        mbenrgy[i] = -1;
-       mbdtype[i] = -1;
-       mbdside[i] = -1;
-       mbdchan[i] = -1;
+       //mbdtype[i] = -1;
+       //mbdside[i] = -1;
+       //mbdchan[i] = -1;
 //   //    truthpar_px[i] = 0;
 //   //    truthpar_py[i] = 0;
 //   //    truthpar_pz[i] = 0;
 //   //    truthpar_pt[i] = 0;
-//   //    truthpar_et[i] = 0;
-//   //    truthpar_ph[i] = 0;
-// //      truthpar_id[i] = 0;
+    truthpar_et[i] = 999;
+    truthpar_ph[i] = 999;
+    truthpar_e[i] = -1;
 //       truthpar_pt1[i] = 0;
 //       truthpar_et1[i] = 0;
 //       truthpar_ph1[i] = 0;
 //       truthpar_id1[i] = 0;
 //   //    truthpar_j[i] = 0;
-//   //    truthpar_em[i] = 0;
+    truthpar_em[i] = -1;
 //   //    truthpar_em1[i] = 0;
 //       prob[i] = 0;
 //       chi2[i] = 0;
@@ -465,36 +449,55 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
       cout << "NO MBD WF" << endl;
       exit(1);
     }
-  */
 
   {
+  */
+    TFile* hotfile = TFile::Open("/sphenix/user/jocl/projects/sandbox/run/hot_towers_21518_1.root");
+    TTree* hottree = hotfile->Get<TTree>("T_hot_tower");
+    int hotet;
+    int hotph;
+    int hotin;
+    hottree->SetBranchAddress("hot_eta",&hotet);
+    hottree->SetBranchAddress("hot_phi",&hotph);
+    hottree->SetBranchAddress("index",&hotin);
+    int hoteta[1000];
+    int hotpha[1000];
+    int hotina[1000];
+    int hots = hottree->GetEntries();
+    for(int i=0; i<hots; ++i)
+      {
+	hottree->GetEntry(i);
+	hoteta[i] = hotet;
+	hotpha[i] = hotph;
+	hotina[i] = hotin;
+      }
+  TowerInfoContainerv1 *towersEM = findNode::getClass<TowerInfoContainerv1>(topNode, "TOWERINFO_CALIB_CEMC");
+  TowerInfoContainerv1 *towersIH = findNode::getClass<TowerInfoContainerv1>(topNode, "TOWERINFO_CALIB_HCALIN");
+  TowerInfoContainerv1 *towersOH = findNode::getClass<TowerInfoContainerv1>(topNode, "TOWERINFO_CALIB_HCALOUT");
 
-    
-  TowerInfoContainerv1 *towersEM = findNode::getClass<TowerInfoContainerv1>(topNode, "TOWERS_Calib_CEMC");
-  TowerInfoContainerv1 *towersIH = findNode::getClass<TowerInfoContainerv1>(topNode, "TOWERS_Calib_HCALIN");
-  TowerInfoContainerv1 *towersOH = findNode::getClass<TowerInfoContainerv1>(topNode, "TOWERS_Calib_HCALOUT");
+  //TowerInfoContainerv1 *towersEMuc = findNode::getClass<TowerInfoContainerv1>(topNode, "TOWERS_CEMC");
+  //TowerInfoContainerv1 *towersIHuc = findNode::getClass<TowerInfoContainerv1>(topNode, "TOWERS_HCALIN");
+  //TowerInfoContainerv1 *towersOHuc = findNode::getClass<TowerInfoContainerv1>(topNode, "TOWERS_HCALOUT");
 
-  TowerInfoContainerv1 *towersEMuc = findNode::getClass<TowerInfoContainerv1>(topNode, "TOWERS_CEMC");
-  TowerInfoContainerv1 *towersIHuc = findNode::getClass<TowerInfoContainerv1>(topNode, "TOWERS_HCALIN");
-  TowerInfoContainerv1 *towersOHuc = findNode::getClass<TowerInfoContainerv1>(topNode, "TOWERS_HCALOUT");
+  //RawTowerGeomContainer *geomEM = findNode::getClass<RawTowerGeomContainer>(topNode, "TOWERGEOM_CEMC");
+  //RawTowerGeomContainer *geomIH = findNode::getClass<RawTowerGeomContainer>(topNode, "TOWERGEOM_HCALIN");
+  //RawTowerGeomContainer *geomOH = findNode::getClass<RawTowerGeomContainer>(topNode, "TOWERGEOM_HCALOUT");
 
-  RawTowerGeomContainer *geomEM = findNode::getClass<RawTowerGeomContainer>(topNode, "TOWERGEOM_CEMC");
-  RawTowerGeomContainer *geomIH = findNode::getClass<RawTowerGeomContainer>(topNode, "TOWERGEOM_HCALIN");
-  RawTowerGeomContainer *geomOH = findNode::getClass<RawTowerGeomContainer>(topNode, "TOWERGEOM_HCALOUT");
-
-  TowerInfoContainerv1 *towersMB = findNode::getClass<TowerInfoContainerv1>(topNode, "TOWERS_MBD");
-
+  //TowerInfoContainerv1 *towersMB = findNode::getClass<TowerInfoContainerv1>(topNode, "TOWERS_MBD");
   if(towersEM)
     {
       int nchannels = 24576;
       float emsume = 0;
+      //TowerInfoContainerv1::TowerMap begin_end = towersEM->getTowers();
+      //for(TowerInfoContainerv1::ConstIter rtiter = begin_end.begin; rtiter != begin_end.end; ++rtiter)
       for(int i=0; i<nchannels; ++i)
 	{
+	  
 	  int skip = 0;
 	  TowerInfov1 *tower = towersEM->get_tower_at_channel(i);
 	  int key = towersEM->encode_key(i);
-	  int time = towersEMuc->get_tower_at_channel(i)->get_time();
-	  if(time > 7 || time < 4) continue;
+	  //int time = towersEMuc->get_tower_at_channel(i)->get_time();
+	  //if(time > 10 || time < 7) continue;
 	  int etabin = towersEM->getTowerEtaBin(key);
 	  int phibin = towersEM->getTowerPhiBin(key);
 	  if(etabin == 37 && phibin == 0) continue;
@@ -508,18 +511,24 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 		  break;
 		}
 	    }
+	  
 	  if(skip) continue;
 	  //float eta = geomEM->get_etacenter(etabin);
 	  //float phi = geomEM->get_phicenter(phibin);
 	  //cout << "it: " << sector << " eta: " << eta << " eng: " << tower->get_energy() << endl;
 	  emcalen[sectorem] = tower->get_energy();
 	  if(emcalen[sectorem] > 20) cout << etabin << " " << phibin << endl;
-	  emsume += tower->get_energy();
+	  
+	  //emsume += tower->get_energy();
 	  emcalet[sectorem] = etabin;
+	  
 	  emcalph[sectorem] = phibin;
+	  
 	  sectorem++;
+	  
 	}
     }
+  
   if(towersOH)
     {
       int nchannels = 1536;
@@ -529,14 +538,11 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
       for(int i=0; i<nchannels; ++i)
 	{
 	  TowerInfov1 *tower = towersOH->get_tower_at_channel(i);
-	  int time = towersOHuc->get_tower_at_channel(i)->get_time();
-	  if(time > 7 || time < 4) continue;
+	  //int time = towersOHuc->get_tower_at_channel(i)->get_time();
+	  //if(time > 7 || time < 4) continue;
 	  int key = towersOH->encode_key(i);
 	  int etabin = towersOH->getTowerEtaBin(key);
 	  int phibin = towersOH->getTowerPhiBin(key);
-	  if (etabin == 23 && phibin == 2) continue;
-	  if (etabin == 7 && phibin == 54) continue;
-	  if (etabin == 22 && phibin == 26) continue;
 	  //float eta = geomOH->get_etacenter(etabin);
 	  //float phi = geomOH->get_phicenter(phibin);
 	  //cout << "it: " << sector << " eta: " << eta << " eng: " << tower->get_energy() << endl;
@@ -547,6 +553,7 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	  sectoroh++;
 	}
     }
+  
   if(towersIH)
     {
       int nchannels = 1536;
@@ -555,16 +562,11 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
       for(int i=0; i<nchannels; ++i)
 	{
 	  TowerInfov1 *tower = towersIH->get_tower_at_channel(i);
-	  int time  = towersIHuc->get_tower_at_channel(i)->get_time();
-	  if(time > 7 || time < 4) continue;
+	  //int time  = towersIHuc->get_tower_at_channel(i)->get_time();
+	  //if(time > 7 || time < 4) continue;
 	  int key = towersIH->encode_key(i);
 	  int etabin = towersIH->getTowerEtaBin(key);
 	  int phibin = towersIH->getTowerPhiBin(key);
-	  if (etabin == 3 && phibin == 15) continue;
-	  if (etabin == 16 && phibin == 33) continue;
-	  if (etabin == 19 && phibin == 1) continue;
-	  if (etabin == 22 && phibin == 2) continue;
-	  if (etabin == 22 && phibin == 3) continue;
 	  //float eta = geomIH->get_etacenter(etabin);
 	  //float phi = geomIH->get_phicenter(phibin);
 	  //cout << "it: " << sector << " eta: " << eta << " eng: " << tower->get_energy() << endl;
@@ -574,6 +576,8 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	  sectorih++;
 	}
     }
+  
+  /*
   if(towersMB)
     {
       int nchannels = 256;
@@ -642,13 +646,39 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
   
   }
   //vector<int> pibarcodes;
-  /*
+  */
+  
   {
     
-    JetMap* jets = findNode::getClass<JetMap>(topNode,"AntiKt_Truth_r04");
+    //JetMap* jets = findNode::getClass<JetMap>(topNode,"AntiKt_Truth_r04");
 
     PHG4TruthInfoContainer* truthinfo = findNode::getClass <PHG4TruthInfoContainer> (topNode, "G4TruthInfo");
-
+    if(truthinfo)
+      {
+    PHG4TruthInfoContainer::ConstRange partrange = truthinfo->GetPrimaryParticleRange();
+    for(PHG4TruthInfoContainer::ConstIterator rtiter = partrange.first; rtiter != partrange.second; ++rtiter)
+      {
+	PHG4Particle* truthpar = rtiter->second;
+	TLorentzVector t;
+        t.SetPxPyPzE (truthpar->get_px (), truthpar->get_py (), truthpar->get_pz (), truthpar->get_e ());
+        truthpar_et[truthpar_n] = t.Eta ();
+	if(abs(t.Eta()) > 1.1) continue;
+        truthpar_ph[truthpar_n] = t.Phi ();
+	truthpar_e[truthpar_n] = truthpar->get_e();
+	int truth_pid = truthpar->get_pid();
+	if(truth_pid == 11 || truth_pid == 22 || truth_pid == 111)
+	  {
+	    truthpar_em[truthpar_n] = 1;
+	  }
+	else
+	  {
+	    truthpar_em[truthpar_n] = 0;
+	  }
+	truthpar_n++;
+      }
+      }
+  }
+    /*
     for (JetMap::Iter iter = jets->begin(); iter != jets->end(); ++iter) {
 
       Jet* this_jet = iter->second;
@@ -848,17 +878,35 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	  }
       }
   }
+  */
+  //cout << "pre zvtx" << endl;
+  GlobalVertexMap *vertexmap = findNode::getClass<GlobalVertexMap>(topNode,"GlobalVertexMap");
+  //cout << "got vertexmap " << vertexmap << endl;
+  auto iter = vertexmap->begin();
+  if(iter != vertexmap->end())
+    {
+      GlobalVertex *vtx = iter->second;
+      zvtx = vtx->get_z();
+    }
+  else
+    {
+      zvtx = -9999;
+    }
+  /*
+  GlobalVertex *vtx = vertexmap->begin()->second;
+  cout << "got primary vertex object " << vtx << endl;
+  zvtx = vtx->get_z();
+  cout << "got zvtx " << zvtx << endl;
+  */
   EventHeaderv1 *event_header = findNode::getClass<EventHeaderv1>(topNode, "EventHeader" );
   if ( event_header ) 
     {
       npart = event_header->get_intval("npart");
       ncoll = event_header->get_intval("ncoll");    
       bimp = event_header->get_floatval("bimp");    
-      std::cout << " npart / ncoll / bimp = " << npart << " / " << ncoll << " / " << bimp << std::endl;
+      //std::cout << " npart / ncoll / bimp = " << npart << " / " << ncoll << " / " << bimp << std::endl;
     }
-
-  */
-  
+  cout << "post header" << endl;
   _tree->Fill();
   
   return Fun4AllReturnCodes::EVENT_OK;
