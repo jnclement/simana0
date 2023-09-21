@@ -113,11 +113,11 @@ int MDCTreeMaker::Init(PHCompositeNode *topNode)
   _tree->Branch("reco_jet_et",reco_jet_et,"reco_jet_et[reco_jet_n]/F");
   _tree->Branch("reco_jet_ph",reco_jet_ph,"reco_jet_ph[reco_jet_n]/F");
   */
-  _tree->Branch("truthpar_n",&truthpar_n,"truthpar_n/I");
-  _tree->Branch("truthpar_e",truthpar_e,"truthpar_e[truthpar_n]/F");
-  _tree->Branch("truthpar_et",truthpar_et,"truthpar_et[truthpar_n]/F");
-  _tree->Branch("truthpar_ph",truthpar_ph,"truthpar_ph[truthpar_n]/F");
-  _tree->Branch("truthpar_em",truthpar_em,"truthpar_em[truthpar_n]/I");
+  //_tree->Branch("truthpar_n",&truthpar_n,"truthpar_n/I");
+  //_tree->Branch("truthpar_e",truthpar_e,"truthpar_e[truthpar_n]/F");
+  //_tree->Branch("truthpar_et",truthpar_et,"truthpar_et[truthpar_n]/F");
+  //_tree->Branch("truthpar_ph",truthpar_ph,"truthpar_ph[truthpar_n]/F");
+  //_tree->Branch("truthpar_em",truthpar_em,"truthpar_em[truthpar_n]/I");
   /*
   _tree->Branch("truthpar_id",truthpar_id,"truthpar_id[truthpar_n]/I");
   // _tree->Branch("truthpar_n",&truthpar_n1,"truthpar_n1/I");
@@ -500,9 +500,12 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	  //if(time > 10 || time < 7) continue;
 	  int etabin = towersEM->getTowerEtaBin(key);
 	  int phibin = towersEM->getTowerPhiBin(key);
+	  /*
 	  if(etabin == 37 && phibin == 0) continue;
 	  if(etabin == 47 && phibin == 138) continue;
 	  if(etabin == 80 && phibin == 228) continue;
+	  */
+	  /*
 	  for(int j=0; j<hots; ++j)
 	    {
 	      if(hoteta[j] == etabin && hotpha[j] == phibin) 
@@ -513,11 +516,12 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	    }
 	  
 	  if(skip) continue;
+	  */
 	  //float eta = geomEM->get_etacenter(etabin);
 	  //float phi = geomEM->get_phicenter(phibin);
 	  //cout << "it: " << sector << " eta: " << eta << " eng: " << tower->get_energy() << endl;
 	  emcalen[sectorem] = tower->get_energy();
-	  if(emcalen[sectorem] > 20) cout << etabin << " " << phibin << endl;
+	  //if(emcalen[sectorem] > 20) cout << etabin << " " << phibin << endl;
 	  
 	  //emsume += tower->get_energy();
 	  emcalet[sectorem] = etabin;
@@ -647,7 +651,7 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
   }
   //vector<int> pibarcodes;
   */
-  
+  /*
   {
     
     //JetMap* jets = findNode::getClass<JetMap>(topNode,"AntiKt_Truth_r04");
@@ -906,7 +910,7 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
       bimp = event_header->get_floatval("bimp");    
       //std::cout << " npart / ncoll / bimp = " << npart << " / " << ncoll << " / " << bimp << std::endl;
     }
-  cout << "post header" << endl;
+  //cout << "post header" << endl;
   _tree->Fill();
   
   return Fun4AllReturnCodes::EVENT_OK;

@@ -8,7 +8,8 @@
 #include <calobase/RawTowerGeomContainer.h>
 #include <calobase/TowerInfoContainer.h>
 #include <calobase/TowerInfoContainerv1.h>
-
+#include <globalvertex/GlobalVertexMap.h>
+#include <globalvertex/GlobalVertex.h>
 #include <calowaveformsim/WaveformContainerv1.h>
 
 #include <g4main/PHG4TruthInfoContainer.h>
@@ -69,7 +70,7 @@ int MDCTreeMaker::Init(PHCompositeNode *topNode)
     
   _f = new TFile( _foutname.c_str(), "RECREATE");
 
-  std::cout << " making a file = " <<  _foutname.c_str() << " , _f = " << _f << std::endl;
+  //std::cout << " making a file = " <<  _foutname.c_str() << " , _f = " << _f << std::endl;
   
   _tree = new TTree("ttree","a persevering date tree");
   //_tree->Branch("emfemevt",emfemevt,"emfemevt[48]/I");
@@ -133,6 +134,7 @@ int MDCTreeMaker::Init(PHCompositeNode *topNode)
   _tree->Branch("truthpar_em",truthpar_em,"truthpar_em[truthpar_n]/I");
   _tree->Branch("truthpar_em1",truthpar_em1,"truthpar_em1[truthpar_n1]/I");
   */
+   _tree->Branch("zvtx",&zvtx,"zvtx/F");
    _tree->Branch("sectorem",&sectorem,"sectorem/I");
    _tree->Branch("sectorih",&sectorih,"sectorih/I");
    _tree->Branch("sectoroh",&sectoroh,"sectoroh/I");
@@ -469,11 +471,9 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 
   {
 
-    
-  TowerInfoContainerv1 *towersEM = findNode::getClass<TowerInfoContainerv1>(topNode, "TOWERS_Calib_CEMC");
-  TowerInfoContainerv1 *towersIH = findNode::getClass<TowerInfoContainerv1>(topNode, "TOWERS_Calib_HCALIN");
-  TowerInfoContainerv1 *towersOH = findNode::getClass<TowerInfoContainerv1>(topNode, "TOWERS_Calib_HCALOUT");
-
+  TowerInfoContainerv1 *towersEM = findNode::getClass<TowerInfoContainerv1>(topNode, "TOWERINFO_CALIB_CEMC");
+  TowerInfoContainerv1 *towersIH = findNode::getClass<TowerInfoContainerv1>(topNode, "TOWERINFO_CALIB_HCALIN");
+  TowerInfoContainerv1 *towersOH = findNode::getClass<TowerInfoContainerv1>(topNode, "TOWERINFO_CALIB_HCALOUT");
   TowerInfoContainerv1 *towersEMuc = findNode::getClass<TowerInfoContainerv1>(topNode, "TOWERS_CEMC");
   TowerInfoContainerv1 *towersIHuc = findNode::getClass<TowerInfoContainerv1>(topNode, "TOWERS_HCALIN");
   TowerInfoContainerv1 *towersOHuc = findNode::getClass<TowerInfoContainerv1>(topNode, "TOWERS_HCALOUT");
@@ -484,6 +484,26 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 
   TowerInfoContainerv1 *towersMB = findNode::getClass<TowerInfoContainerv1>(topNode, "TOWERS_MBD");
 
+  GlobalVertexMap *vertexmap = findNode::getClass<GlobalVertexMap>(topNode,"GlobalVertexMap");
+  auto iter = vertexmap->begin();
+  if(iter != vertexmap->end()) {
+    GlobalVertex *vtx = iter->second;
+    float x_vtx = vtx->get_x();
+    float y_vtx = vtx->get_y();
+    zvtx = vtx->get_z();
+    if (x_vtx == 0 && y_vtx == 0 && zvtx == 0) {
+      //event++;
+      return Fun4AllReturnCodes::EVENT_OK;
+    }
+    //h_vertex->Fill(zvtx);
+    if (fabs(zvtx) > 30.0) {
+      //event++;
+      return Fun4AllReturnCodes::EVENT_OK;
+    }
+  } else {
+    //event++;
+    return Fun4AllReturnCodes::EVENT_OK;
+  }
   if(towersEM)
     {
       int nchannels = 24576;
@@ -494,9 +514,10 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	  TowerInfov1 *tower = towersEM->get_tower_at_channel(i);
 	  int key = towersEM->encode_key(i);
 	  int time = towersEMuc->get_tower_at_channel(i)->get_time();
-	  if(time > 10 || time < 7) continue;
+	  if(time > 7 || time < 5) continue;
 	  int etabin = towersEM->getTowerEtaBin(key);
 	  int phibin = towersEM->getTowerPhiBin(key);
+	  /*
 	  if(etabin == 37 && phibin == 0) continue;
 	  if(etabin == 47 && phibin == 138) continue;
 	  if(etabin == 80 && phibin == 228) continue;
@@ -509,11 +530,12 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 		}
 	    }
 	  if(skip) continue;
+	  */
 	  //float eta = geomEM->get_etacenter(etabin);
 	  //float phi = geomEM->get_phicenter(phibin);
 	  //cout << "it: " << sector << " eta: " << eta << " eng: " << tower->get_energy() << endl;
 	  emcalen[sectorem] = tower->get_energy();
-	  if(emcalen[sectorem] > 20) cout << etabin << " " << phibin << endl;
+	  //if(emcalen[sectorem] > 20) cout << etabin << " " << phibin << endl;
 	  emsume += tower->get_energy();
 	  emcalet[sectorem] = etabin;
 	  emcalph[sectorem] = phibin;
@@ -530,13 +552,15 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	{
 	  TowerInfov1 *tower = towersOH->get_tower_at_channel(i);
 	  int time = towersOHuc->get_tower_at_channel(i)->get_time();
-	  if(time > 7 || time < 4) continue;
+	  if(time > 8 || time < 5) continue;
 	  int key = towersOH->encode_key(i);
 	  int etabin = towersOH->getTowerEtaBin(key);
 	  int phibin = towersOH->getTowerPhiBin(key);
+	  /*
 	  if (etabin == 23 && phibin == 2) continue;
 	  if (etabin == 7 && phibin == 54) continue;
 	  if (etabin == 22 && phibin == 26) continue;
+	  */
 	  //float eta = geomOH->get_etacenter(etabin);
 	  //float phi = geomOH->get_phicenter(phibin);
 	  //cout << "it: " << sector << " eta: " << eta << " eng: " << tower->get_energy() << endl;
@@ -556,15 +580,17 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	{
 	  TowerInfov1 *tower = towersIH->get_tower_at_channel(i);
 	  int time  = towersIHuc->get_tower_at_channel(i)->get_time();
-	  if(time > 7 || time < 4) continue;
+	  if(time > 7 || time < 5) continue;
 	  int key = towersIH->encode_key(i);
 	  int etabin = towersIH->getTowerEtaBin(key);
 	  int phibin = towersIH->getTowerPhiBin(key);
+	  /*
 	  if (etabin == 3 && phibin == 15) continue;
 	  if (etabin == 16 && phibin == 33) continue;
 	  if (etabin == 19 && phibin == 1) continue;
 	  if (etabin == 22 && phibin == 2) continue;
 	  if (etabin == 22 && phibin == 3) continue;
+	  */
 	  //float eta = geomIH->get_etacenter(etabin);
 	  //float phi = geomIH->get_phicenter(phibin);
 	  //cout << "it: " << sector << " eta: " << eta << " eng: " << tower->get_energy() << endl;
