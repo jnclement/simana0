@@ -513,8 +513,10 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	  int skip = 0;
 	  TowerInfov1 *tower = towersEM->get_tower_at_channel(i);
 	  int key = towersEM->encode_key(i);
-	  int time = towersEMuc->get_tower_at_channel(i)->get_time();
-	  if(time > 7 || time < 5) continue;
+	  int time0 = towersEMuc->get_tower_at_channel(i)->get_time();
+	  int time = towersEM->get_tower_at_channel(i)->get_time();
+	  if(time != time0) cout << time << " emcal " << time0 << endl;
+	  if(time > 7 || time < 4) continue;
 	  int etabin = towersEM->getTowerEtaBin(key);
 	  int phibin = towersEM->getTowerPhiBin(key);
 	  /*
@@ -551,7 +553,9 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
       for(int i=0; i<nchannels; ++i)
 	{
 	  TowerInfov1 *tower = towersOH->get_tower_at_channel(i);
-	  int time = towersOHuc->get_tower_at_channel(i)->get_time();
+	  int time = towersOH->get_tower_at_channel(i)->get_time();
+	  int time0 = towersOHuc->get_tower_at_channel(i)->get_time();
+	  if(time != time0) cout << time << " hcal " << time0 << endl;
 	  if(time > 8 || time < 5) continue;
 	  int key = towersOH->encode_key(i);
 	  int etabin = towersOH->getTowerEtaBin(key);
@@ -579,7 +583,9 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
       for(int i=0; i<nchannels; ++i)
 	{
 	  TowerInfov1 *tower = towersIH->get_tower_at_channel(i);
-	  int time  = towersIHuc->get_tower_at_channel(i)->get_time();
+	  int time0  = towersIHuc->get_tower_at_channel(i)->get_time();
+	  int time = towersIH->get_tower_at_channel(i)->get_time();
+	  if(time != time0) cout << time << " ihcal " << time0 << endl;
 	  if(time > 7 || time < 5) continue;
 	  int key = towersIH->encode_key(i);
 	  int etabin = towersIH->getTowerEtaBin(key);
