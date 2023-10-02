@@ -112,7 +112,7 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
   sectorih = 0;
   sectoroh = 0;
   sectormb = 0;
-
+  /*
   for(int i=0; i<sizeof(emcalen)/sizeof(emcalen[0]); i++)
     {
       emcalen[i] = -1;
@@ -129,6 +129,7 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
       mbdside[i] = -1;
       mbdchan[i] = -1;
     }
+  */
   {
      
     //Get towerinfocontainer objects from nodetree

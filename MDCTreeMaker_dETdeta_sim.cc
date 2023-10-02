@@ -29,9 +29,6 @@
 
 #include <jetbackground/TowerBackgroundv1.h>
 
-//#include <g4jets/JetMap.h>
-//#include <g4jets/Jet.h>
-
 #include <TLorentzVector.h>
 
 #include <gsl/gsl_randist.h>
@@ -45,8 +42,6 @@
 #include <centrality/CentralityInfov1.h>
 
 using namespace std;
-int eventchecker = 0;
-//sorry about the global - just for debug.
 //____________________________________________________________________________..
 MDCTreeMaker::MDCTreeMaker(const std::string &name):
   SubsysReco((name+"test").c_str())
@@ -68,69 +63,11 @@ int MDCTreeMaker::Init(PHCompositeNode *topNode)
   std::cout << " making a file = " <<  _foutname.c_str() << " , _f = " << _f << std::endl;
   
   _tree = new TTree("ttree","a persevering date tree");
-  //_tree->Branch("emfemevt",emfemevt,"emfemevt[48]/I");
-  //_tree->Branch("empktfem",empktfem,"empktfem[128]/I");
-  //_tree->Branch("emfemclk",emfemclk,"emfemclk[48]/I");
-  //_tree->Branch("emxmtevt",emxmtevt,"emxmtevt[128]/I");
-  //_tree->Branch("emxmtclk",emxmtclk,"emxmtclk[128]/I");
-  //_tree->Branch("empktevt",empktevt,"empktevt[128]/I");
-  //_tree->Branch("hofemevt",hofemevt,"hofemevt[48]/I");
-  //_tree->Branch("hopktfem",hopktfem,"hopktfem[32]/I");
-  //_tree->Branch("hofemclk",hofemclk,"hofemclk[12]/I");
-  //_tree->Branch("hoxmtevt",hoxmtevt,"hoxmtevt[32]/I");
-  //_tree->Branch("hoxmtclk",hoxmtclk,"hoxmtclk[32]/I");
-  //_tree->Branch("hopktevt",hopktevt,"hopktevt[32]/I");
-  //_tree->Branch("hifemevt",hifemevt,"hifemevt[48]/I");
-  //_tree->Branch("hipktfem",hipktfem,"hipktfem[32]/I");
-  //_tree->Branch("hifemclk",hifemclk,"hifemclk[12]/I");
-  //_tree->Branch("hixmtevt",hixmtevt,"hixmtevt[32]/I");
-  //_tree->Branch("hixmtclk",hixmtclk,"hixmtclk[32]/I");
-  //_tree->Branch("hipktevt",hipktevt,"hipktevt[32]/I");
-  //_tree->Branch("mbfemevt",mbfemevt,"mbfemevt[4]/I");
-  //_tree->Branch("mbpktfem",mbpktfem,"mbpktfem[2]/I");
-  //_tree->Branch("mbfemclk",mbfemclk,"mbfemclk[4]/I");
-  //_tree->Branch("mbxmtevt",mbxmtevt,"mbxmtevt[2]/I");
-  //_tree->Branch("mbxmtclk",mbxmtclk,"mbxmtclk[2]/I");
-  //_tree->Branch("mbpktevt",mbpktevt,"mbpktevt[2]/I");
-  /*
-  _tree->Branch("emsize",&emsize,"emsize/I");
-  _tree->Branch("hisize",&hisize,"hisize/I");
-  _tree->Branch("hosize",&hosize,"hosize/I");
-  _tree->Branch("emkey",&emkey);
-  _tree->Branch("hikey",&hikey);
-  _tree->Branch("hokey",&hokey);
-  _tree->Branch("emwf",&emwf);
-  _tree->Branch("hiwf",&hiwf);
-  _tree->Branch("howf",&howf);
-  */
-  /*
-  _tree->Branch("truthjet_n",&truthjet_n,"truthjet_n/I");
-  _tree->Branch("truthjet_pt",truthjet_pt,"truthjet_pt[truthjet_n]/F");
-  _tree->Branch("truthjet_et",truthjet_et,"truthjet_et[truthjet_n]/F");
-  _tree->Branch("truthjet_ph",truthjet_ph,"truthjet_ph[truthjet_n]/F");
-  _tree->Branch("reco_jet_n",&reco_jet_n,"reco_jet_n/I");
-  _tree->Branch("reco_jet_pt",reco_jet_pt,"reco_jet_pt[reco_jet_n]/F");
-  _tree->Branch("reco_jet_et",reco_jet_et,"reco_jet_et[reco_jet_n]/F");
-  _tree->Branch("reco_jet_ph",reco_jet_ph,"reco_jet_ph[reco_jet_n]/F");
-  */
   //_tree->Branch("truthpar_n",&truthpar_n,"truthpar_n/I");
   //_tree->Branch("truthpar_e",truthpar_e,"truthpar_e[truthpar_n]/F");
   //_tree->Branch("truthpar_et",truthpar_et,"truthpar_et[truthpar_n]/F");
   //_tree->Branch("truthpar_ph",truthpar_ph,"truthpar_ph[truthpar_n]/F");
   //_tree->Branch("truthpar_em",truthpar_em,"truthpar_em[truthpar_n]/I");
-  /*
-  _tree->Branch("truthpar_id",truthpar_id,"truthpar_id[truthpar_n]/I");
-  // _tree->Branch("truthpar_n",&truthpar_n1,"truthpar_n1/I");
-  // _tree->Branch("truthpar_pt",truthpar_pt1,"truthpar_pt1[truthpar_n1]/F");
-  // _tree->Branch("truthpar_et",truthpar_et1,"truthpar_et1[truthpar_n1]/F");
-  // _tree->Branch("truthpar_ph",truthpar_ph1,"truthpar_ph1[truthpar_n1]/F");
-  // _tree->Branch("truthpar_id",truthpar_id1,"truthpar_id1[truthpar_n1]/I");
-  /*
-  _tree->Branch("truthpar_j",truthpar_j,"truthpar_j[truthpar_n]/I");
-  _tree->Branch("emfrac",emfrac,"emfrac[truthjet_n]/F");
-  _tree->Branch("truthpar_em",truthpar_em,"truthpar_em[truthpar_n]/I");
-  _tree->Branch("truthpar_em1",truthpar_em1,"truthpar_em1[truthpar_n1]/I");
-  */
    _tree->Branch("sectorem",&sectorem,"sectorem/I");
    _tree->Branch("sectorih",&sectorih,"sectorih/I");
    _tree->Branch("sectoroh",&sectoroh,"sectoroh/I");
@@ -148,29 +85,10 @@ int MDCTreeMaker::Init(PHCompositeNode *topNode)
    //_tree->Branch("mbdtype",mbdtype,"mbdtype[sectormb]/I");
    //_tree->Branch("mbdside",mbdside,"mbdside[sectormb]/I");
    //_tree->Branch("mbdchan",mbdchan,"mbdchan[sectormb]/I");
-  // _tree->Branch("nclus",&nclus,"nclus/I");
-  // _tree->Branch("prob",prob,"prob[nclus]/F");
-  // _tree->Branch("chi2",chi2,"chi2[nclus]/F");
-  // _tree->Branch("cluster_E",_cluster_E,"cluster_E[nclus]/F");
-  // _tree->Branch("cluster_eta",_cluster_eta,"cluster_eta[nclus]/F");
-  // _tree->Branch("cluster_phi",_cluster_phi,"cluster_phi[nclus]/F");
-  // _tree->Branch("cluster_ntower",_cluster_ntower,"cluster_ntower[nclus]/I");
-  // _tree->Branch("cluster_Ecore",cluster_Ecore,"cluster_Ecore[nclus]/F");
-  //_tree->Branch("clustowE",clustowE,"clustowE[cluster_ntower[nclus]]/F");
-  //_tree->Branch("clustowet",clustowet,"clustowet[cluster_ntower[nclus]]/F");
-  //_tree->Branch("clustowph",clustowph,"clustowph[cluster_ntower[nclus]]/F");
   _tree->Branch("npart",&npart,"npart/I");
   _tree->Branch("ncoll",&ncoll,"ncoll/I");
   _tree->Branch("bimp",&bimp,"bimp/F");
   _tree->Branch("zvtx",&zvtx,"zvtx/F");
-  /*
-  // _tree->Branch("bestclus",&bestclus,"bestclus/I");
-  // _tree->Branch("bcnt",&bcnt,"bcnt/I");
-  // _tree->Branch("bcmt",&bcmt,"bcmt/I");
-  // _tree->Branch("bctet",bctet,"bctet[bcnt]/F");
-  // _tree->Branch("bctph",bctph,"bctph[bcnt]/F");
-  // _tree->Branch("bcten",bcten,"bcten[bcnt]/F");
-  */
   return Fun4AllReturnCodes::EVENT_OK;
 }
 
@@ -179,83 +97,13 @@ int MDCTreeMaker::InitRun(PHCompositeNode *topNode)
 {
   return Fun4AllReturnCodes::EVENT_OK;
 }
-/*
-void climbup(int depth, HepMC::GenVertex::particle_iterator part)
-{
-  ++depth;
-  if(!(*part)->production_vertex())
-    {
-      for(int i=0; i<depth; i++)
-	{
-	  cout << "   ";
-	}
-      cout << "pid=" << (*part)->pdg_id() << "barcd=" << (*part)->barcode() << " top level particle" << endl;
-    }
-  else
-    {
-      for(HepMC::GenVertex::particle_iterator newpart = (*part)->production_vertex()->particles_begin(HepMC::parents);
-	  newpart != (*part)->production_vertex()->particles_end(HepMC::parents); ++newpart)
-	{
-	  for(int i=0; i<depth; i++)
-	    {
-	      //cout << "   ";
-	    }
-	  //cout << "pid=" << (*newpart)->pdg_id() << " barcd=" << (*newpart)->barcode() <<" production position x y z = "
-	  //     << (*part)->production_vertex()->position().x() << " " << (*part)->production_vertex()->position().y() <<
-	  //  " " << (*part)->production_vertex()->position().z() << endl;
-	  //climbup(depth, newpart);
-	}
-    }
-}
-*/
 //____________________________________________________________________________..
 int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 {
-  /*
-  emsize = 0;
-  hisize = 0;
-  hosize = 0;
-  emkey.clear();
-  hikey.clear();
-  hokey.clear();
-  emwf.clear();
-  hiwf.clear();
-  howf.clear();
-  */
-  /*
-  for(int i=0; i<48; ++i)
-     {
-  //for(int j=0; j<3; ++j)
-  //	{
-       //emfemevt[i] = 0;
-	  emfemclk[i] = -1;
-	  if(i<12)
-	    {
-	  //hofemevt = 0;
-	  hofemclk[i] = -1;
-	  //hifemevt = 0;
-	  hifemclk[i] = -1;
-	    }
-	  if(i<4)
-	    {
-	  //mbfemevt = 0;
-	  mbfemclk[i] = -1;
-	    }
-	  //	}
-	  //femit[i] = 0;
-	  //evtit[i] = 0;
-      }
-  */
-  // here is where the code goes 
-//  truthjet_n = 0;
-//  reco_jet_n = 0;
   truthpar_n = 0;
-//   truthpar_n1 = 0;
   sectorem = 0;
   sectorih = 0;
   sectoroh = 0;
-  // sectormb = 0;
-//   nclus = 0;
    for(int i=0; i<100000; i++)
      {
        emcalen[i] = -1;
