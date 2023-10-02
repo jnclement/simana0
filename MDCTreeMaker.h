@@ -11,7 +11,6 @@
 #include "TFile.h"
 
 class PHCompositeNode;
-
 class MDCTreeMaker : public SubsysReco
 {
  public:
@@ -39,118 +38,50 @@ class MDCTreeMaker : public SubsysReco
 
  private:
 
-  TFile* hotfile;
-  TTree* hottree;
+  //TFile* hotfile;
+  //TTree* hottree;
   TFile *_f;
   TTree *_tree;
   std::string _foutname;
-  /*
-  int emsize;
-  int hisize;
-  int hosize;
-  std::vector<unsigned int> emkey;
-  std::vector<unsigned int> hikey;
-  std::vector<unsigned int> hokey;
-  std::vector<float> emwf;
-  std::vector<float> hiwf;
-  std::vector<float> howf;
-  int truthjet_n;
-  */
   int sectorem;
   int sectorih;
   int sectoroh;
   int sectormb;
-  /*
-  float truthjet_pt[1000];
-  float truthjet_et[1000];
-  float truthjet_ph[1000];
-  int reco_jet_n;
-  float reco_jet_pt[1000];
-  float reco_jet_et[1000];
-  float reco_jet_ph[1000];
-  int truthpar_n;
-  float truthpar_px[100000];
-  float truthpar_py[100000];
-  float truthpar_pz[100000];
-  */
-  //int truthpar_n1;
-  int truthpar_n;
-  //float truthpar_pt[100000];
-  int truthpar_em[100000];
-  float truthpar_et[100000];
-  float truthpar_ph[100000];
-  float truthpar_e[100000];
-  /*
-  int truthpar_id[100000];
-  float truthpar_pt1[100000];
-  float truthpar_et1[100000];
-  float truthpar_ph1[100000];
-  int truthpar_id1[100000];
-  int truthpar_j[100000];
-  float emfrac[10000];
-  */
+  // int truthpar_n;
   //int truthpar_em[100000];
-  //int truthpar_em1[100000];
-  float emcalen[25000];
-  float ihcalen[25000];
-  float ohcalen[25000];
-  int emcalet[25000];
-  int ihcalet[25000];
-  int ohcalet[25000];
-  int emcalph[25000];
-  int ihcalph[25000];
-  int ohcalph[25000];
-  float mbenrgy[25000];
-  int mbdtype[25000];
-  int mbdside[25000];
-  int mbdchan[25000];
-  /*
-  float prob[100000];
-  float chi2[100000];
-  float _cluster_E[10000];
-  float _cluster_phi[10000];
-  float _cluster_eta[10000];
-  int _cluster_ntower[10000];
-  float cluster_Ecore[10000];
-  float clustowE[10000];
-  float clustowet[10000];
-  float clustowph[10000];
-  int nclus;
-  */
+  //float truthpar_et[100000];
+  //float truthpar_ph[100000];
+  //float truthpar_e[100000];
+  float emcalen[24576];
+  float ihcalen[1536];
+  float ohcalen[1536];
+  int emcalt[24576];
+  int ihcalt[1536];
+  int ohcalt[1536];
+  int emcaladc[24576];
+  int ihcaladc[1536];
+  int ohcaladc[1536];
+  float emcalpos[24576][3];
+  float ihcalpos[1536][3];
+  float ohcalpos[1536][3];
+  float emcalet[24576];
+  float ihcalet[1536];
+  float ohcalet[1536];
+  float emcalph[24576];
+  float ihcalph[1536];
+  float ohcalph[1536];
+  float mbenrgy[256];
+  int mbdtype[256];
+  int mbdside[256];
+  int mbdchan[256];
   int npart;
   int ncoll;
   float bimp;
-  float zvtx;
-  /*
-  int bestclus;
-  int bcnt;
-  int bcmt;
-  float bctet[100];
-  float bctph[100];
-  float bcten[100];
-  //int emfemevt[48];
-  //int empktfem[128];
-  //int emfemclk[48];
-  //int emxmtevt;
-  //int emxmtclk[128];
-  //int hofemevt[12];
-  //int hopktfem[32];
-  //int hofemclk[12];
-  //int hoxmtevt[32];
-  //int hoxmtclk[32];
-  //int hifemevt[12];
-  //int hipktfem[32];
-  //int hifemclk[12];
-  //int hixmtevt[32];
-  //int hixmtclk[32];
-  //int mbfemevt[4];
-  //int mbpktfem[2];
-  //int mbfemclk[4];
-  //int mbxmtevt[2];
-  //int mbxmtclk[2];
-  //int femit[128];
-  //int evtit[128];
-  */
+  float track_vtx[3];
+  float truth_vtx[3];
+  float emetacor[24576];
+  float ihetacor[1536];
+  float ohetacor[1536];
 };
 
 #endif // MDCTREEMAKER
