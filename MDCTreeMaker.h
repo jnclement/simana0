@@ -15,7 +15,7 @@ class MDCTreeMaker : public SubsysReco
 {
  public:
 
-  MDCTreeMaker(const std::string &name = "MDCTreeMaker", const int dataormc = 0);
+  MDCTreeMaker(const std::string &name = "MDCTreeMaker", const int dataormc = 0, const int debug = 1);
 
   virtual ~MDCTreeMaker();
 
@@ -38,6 +38,7 @@ class MDCTreeMaker : public SubsysReco
 
  private:
 
+  int _debug;
   int _dataormc;
   TFile *_f;
   TTree *_tree;
@@ -58,12 +59,12 @@ class MDCTreeMaker : public SubsysReco
   float emcalpos[24576][3];
   float ihcalpos[1536][3];
   float ohcalpos[1536][3];
-  float emcalet[24576];
-  float ihcalet[1536];
-  float ohcalet[1536];
-  float emcalph[24576];
-  float ihcalph[1536];
-  float ohcalph[1536];
+  int emcaletabin[24576];
+  int ihcaletabin[1536];
+  int ohcaletabin[1536];
+  int emcalphibin[24576];
+  int ihcalphibin[1536];
+  int ohcalphibin[1536];
   float mbenrgy[256];
   int mbdtype[256];
   int mbdside[256];
