@@ -11,7 +11,7 @@
 #include <globalvertex/GlobalVertexMap.h>
 #include <globalvertex/GlobalVertex.h>
 #include <calowaveformsim/WaveformContainerv1.h>
-
+#include <g4main/PHG4VtxPoint.h>
 #include <g4main/PHG4TruthInfoContainer.h>
 #include <g4main/PHG4Particle.h>
 
