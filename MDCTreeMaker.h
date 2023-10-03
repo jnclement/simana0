@@ -15,7 +15,7 @@ class MDCTreeMaker : public SubsysReco
 {
  public:
 
-  MDCTreeMaker(const std::string &name = "MDCTreeMaker");
+  MDCTreeMaker(const std::string &name = "MDCTreeMaker", const int dataormc = 0);
 
   virtual ~MDCTreeMaker();
 
@@ -38,8 +38,7 @@ class MDCTreeMaker : public SubsysReco
 
  private:
 
-  //TFile* hotfile;
-  //TTree* hottree;
+  int _dataormc;
   TFile *_f;
   TTree *_tree;
   std::string _foutname;
@@ -47,11 +46,6 @@ class MDCTreeMaker : public SubsysReco
   int sectorih;
   int sectoroh;
   int sectormb;
-  // int truthpar_n;
-  //int truthpar_em[100000];
-  //float truthpar_et[100000];
-  //float truthpar_ph[100000];
-  //float truthpar_e[100000];
   float emcalen[24576];
   float ihcalen[1536];
   float ohcalen[1536];

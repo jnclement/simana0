@@ -44,10 +44,11 @@
 
 using namespace std;
 //____________________________________________________________________________..
-MDCTreeMaker::MDCTreeMaker(const std::string &name):
+MDCTreeMaker::MDCTreeMaker(const std::string &name, const int dataormc):
   SubsysReco((name+"test").c_str())
 {
   _foutname = name;  
+  _dataormc = dataormc;
 }
 
 //____________________________________________________________________________..
@@ -95,6 +96,13 @@ int MDCTreeMaker::Init(PHCompositeNode *topNode)
   _tree->Branch("emetacor",emetacor,"emetacor[sectorem]/F"); //corrected eta value **NOT A BIN INDEX**
   _tree->Branch("ihetacor",ihetacor,"ihetacor[sectorih]/F");
   _tree->Branch("ohetacor",ohetacor,"ohetacor[sectoroh]/F");
+
+  if(_dataormc) //get collision parameters for MC
+    {
+      _tree->Branch("npart",&npart,"npart/I");
+      _tree->Branch("ncoll",&ncoll,"ncoll/I");
+      _tree->Branch("bimp",&bimp,"bimp/F");
+    }
   return Fun4AllReturnCodes::EVENT_OK;
 }
 
@@ -107,7 +115,7 @@ int MDCTreeMaker::InitRun(PHCompositeNode *topNode)
 int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 {
 
-  //reset everything to all zero
+  //reset lengths to all zero
   sectorem = 0;
   sectorih = 0;
   sectoroh = 0;
@@ -183,9 +191,9 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	    emcalpos[sectorem][0] = tower_geom->get_center_x(); //get positions of towers
 	    emcalpos[sectorem][1] = tower_geom->get_center_y();
 	    emcalpos[sectorem][2] = tower_geom->get_center_z();
-	    double newz = emcalpos[2] - track_vtx[2];
-	    double newx = emcalpos[0] - track_vtx[1];
-	    double newy = emcalpos[1] - track_vtx[0];
+	    double newz = emcalpos[sectorem][2] - track_vtx[2];
+	    double newx = emcalpos[sectorem][0] - track_vtx[1];
+	    double newy = emcalpos[sectorem][1] - track_vtx[0];
 	    emetacor[sectorem] = asinh(newz/sqrt(newx*newx+newy*newy));
 	    emcalet[sectorem] = etabin; //get eta and phi of towers
 	    emcalph[sectorem] = phibin;
@@ -212,9 +220,9 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	    ohcalpos[sectoroh][0] = tower_geom->get_center_x();
 	    ohcalpos[sectoroh][1] = tower_geom->get_center_y();
 	    ohcalpos[sectoroh][2] = tower_geom->get_center_z();
-	    double newz = ohcalpos[2] - track_vtx[2];
-	    double newx = ohcalpos[0] - track_vtx[1];
-	    double newy = ohcalpos[1] - track_vtx[0];
+	    double newz = ohcalpos[sectoroh][2] - track_vtx[2];
+	    double newx = ohcalpos[sectoroh][0] - track_vtx[1];
+	    double newy = ohcalpos[sectoroh][1] - track_vtx[0];
 	    ohetacor[sectoroh] = asinh(newz/sqrt(newx*newx+newy*newy));
 
 	    ohcalet[sectoroh] = etabin;
@@ -242,9 +250,9 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	    ihcalpos[sectorih][0] = tower_geom->get_center_x();
 	    ihcalpos[sectorih][1] = tower_geom->get_center_y();
 	    ihcalpos[sectorih][2] = tower_geom->get_center_z();
-	    double newz = ihcalpos[2] - track_vtx[2];
-	    double newx = ihcalpos[0] - track_vtx[1];
-	    double newy = ihcalpos[1] - track_vtx[0];
+	    double newz = ihcalpos[sectorih][2] - track_vtx[2];
+	    double newx = ihcalpos[sectorih][0] - track_vtx[1];
+	    double newy = ihcalpos[sectorih][1] - track_vtx[0];
 	    ihetacor[sectorih] = asinh(newz/sqrt(newx*newx+newy*newy));
 
 	    ihcalet[sectorih] = etabin;
@@ -275,6 +283,20 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	cout << "no MBD towers!!!" << endl;
       }
   }  
+
+  if(_dataormc) //get collision parameteres for MC
+    {
+      EventHeaderv1 *event_header = findNode::getClass<EventHeaderv1>(topNode, "EventHeader" );
+      if ( event_header )
+	{
+	  npart = event_header->get_intval("npart");
+	  ncoll = event_header->get_intval("ncoll");
+	  bimp = event_header->get_floatval("bimp");
+	}
+    }
+  _tree->Fill();
+
+
   _tree->Fill();
   
   return Fun4AllReturnCodes::EVENT_OK;
