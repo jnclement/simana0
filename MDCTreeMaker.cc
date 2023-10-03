@@ -97,12 +97,15 @@ int MDCTreeMaker::Init(PHCompositeNode *topNode)
   _tree->Branch("emetacor",emetacor,"emetacor[sectorem]/F"); //corrected eta value **NOT A BIN INDEX**
   _tree->Branch("ihetacor",ihetacor,"ihetacor[sectorih]/F");
   _tree->Branch("ohetacor",ohetacor,"ohetacor[sectoroh]/F");
+
   if(_dataormc) //get collision parameters for MC
     {
+      _tree->Branch("truth_vertices",&truth_vertices,"truth_vertices/I");
       _tree->Branch("npart",&npart,"npart/I");
       _tree->Branch("ncoll",&ncoll,"ncoll/I");
       _tree->Branch("bimp",&bimp,"bimp/F");
-      _tree->Branch("truth_vtx",truth_vtx,"truth_vtx[3]/f");
+      _tree->Branch("truth_vtx",truth_vtx,"truth_vtx[truth_vertices][3]/F");
+      _tree->Branch("vtx_id",vtx_id,"vtx_id[truth_vertices]/I");
     }
   return Fun4AllReturnCodes::EVENT_OK;
 }
@@ -302,6 +305,25 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	  npart = event_header->get_intval("npart");
 	  ncoll = event_header->get_intval("ncoll");
 	  bimp = event_header->get_floatval("bimp");
+	}
+      PHG4TruthInfoContainer *truthinfo = findNode::getClass<PHG4TruthInfoContainer>(topNode, "G4TruthInfo");
+      if (!truthinfo && _debug) std::cout << PHWHERE << "PHG4TruthInfoContainer node is missing, can't collect additional truth particles"<< std::endl;
+  
+      PHG4TruthInfoContainer::VtxRange vtxrange = truthinfo->GetVtxRange();
+      truth_vertices = 0;
+      for (PHG4TruthInfoContainer::ConstVtxIterator iter = vtxrange.first; iter != vtxrange.second; ++iter)
+	{
+	  PHG4VtxPoint *vtx = iter->second;
+	  truth_vtx[truth_vertices][0] = vtx->get_x();
+	  truth_vtx[truth_vertices][1] = vtx->get_y();
+	  truth_vtx[truth_vertices][2] = vtx->get_z();
+	  vtx_id[truth_vertices] = vtx->get_id();
+	  truth_vertices++;
+	  if(_debug && truth_vertices > 998)
+	    {
+	      cout << "Too many truth vertices!" << endl;
+	      break;
+	    }
 	}
     }
   

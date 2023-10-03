@@ -72,8 +72,10 @@ class MDCTreeMaker : public SubsysReco
   int npart;
   int ncoll;
   float bimp;
+  int truth_vertices;
   float track_vtx[3];
-  float truth_vtx[3];
+  float truth_vtx[1000][3];
+  int vtx_id[1000];
   float emetacor[24576];
   float ihetacor[1536];
   float ohetacor[1536];
