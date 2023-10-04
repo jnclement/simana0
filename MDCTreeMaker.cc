@@ -88,9 +88,13 @@ int MDCTreeMaker::Init(PHCompositeNode *topNode)
   _tree->Branch("emcalt",emcalt,"emcalt[sectorem]/I"); //time value of EMCal sector
   _tree->Branch("ihcalt",ihcalt,"ihcalt[sectorih]/I");
   _tree->Branch("ohcalt",ohcalt,"ohcalt[sectoroh]/I");
-  _tree->Branch("emcaladc",emcaladc,"emcaladc[sectorem]/I"); //time value of EMCal sector
-  _tree->Branch("ihcaladc",ihcaladc,"ihcaladc[sectorih]/I");
-  _tree->Branch("ohcaladc",ohcaladc,"ohcaladc[sectoroh]/I");
+
+  if(!_dataormc)
+    {
+      _tree->Branch("emcaladc",emcaladc,"emcaladc[sectorem]/I"); //time value of EMCal sector
+      _tree->Branch("ihcaladc",ihcaladc,"ihcaladc[sectorih]/I");
+      _tree->Branch("ohcaladc",ohcaladc,"ohcaladc[sectoroh]/I");
+    }
   _tree->Branch("ihcalpos",ihcalpos,"ihcalpos[sectorih][3]/F"); //position (xyz) of EMCal sector center
   _tree->Branch("emcalpos",emcalpos,"emcalpos[sectorem][3]/F");
   _tree->Branch("ohcalpos",ohcalpos,"ohcalpos[sectoroh][3]/F");
@@ -160,7 +164,8 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
     
     GlobalVertexMap *vertexmap = findNode::getClass<GlobalVertexMap>(topNode,"GlobalVertexMap");
     if(_debug) cout << "Checking that all necessary objects exist" << endl;
-    if(!towersEM || !towersIH || !towersOH || !towersEMuc || !towersIHuc || !towersOHuc || !geomEM || !geomIH || !geomOH || !vertexmap) return Fun4AllReturnCodes::EVENT_OK; //remove events which do not have all required information
+    if(!towersEM || !towersIH || !towersOH || !geomEM || !geomIH || !geomOH || !vertexmap) return Fun4AllReturnCodes::EVENT_OK; //remove events which do not have all required information
+    if(_dataormc && (!towersIHuc || !towersEMuc || !towersOHuc)) return Fun4AllReturnCodes::EVENT_OK;
     if(_debug) cout << "EM geomtry node: " << geomEM << endl;
     if(_debug) cout << "Getting vertex" << endl;
     auto iter = vertexmap->begin(); //z vertex getting
@@ -185,18 +190,23 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	for(int i=0; i<nchannels; ++i) //loop over channels
 	  {
 	    TowerInfov1 *tower = towersEM->get_tower_at_channel(i); //get EMCal tower
-	    if(_debug) cout << "Tower " << i << ": " << tower << endl;
+	    //if(_debug) cout << "Tower " << i << ": " << tower << endl;
  	    int key = towersEM->encode_key(i);
 	    int time = towersEM->get_tower_at_channel(i)->get_time(); //get uncalibrated tower
-	    if(time > 7 || time < 5) continue; //timing cut
+	    
+	    if(time > 7 || time < 5)
+	      {
+		//cout << time << endl;
+		continue; //timing cu
+	      }
 	    int etabin = towersEM->getTowerEtaBin(key); //get eta and phi indices
 	    int phibin = towersEM->getTowerPhiBin(key);
 	    emcalen[sectorem] = tower->get_energy(); //actual tower energy (calibrated)
 	    const RawTowerDefs::keytype geomkey = RawTowerDefs::encode_towerid(RawTowerDefs::CalorimeterId::CEMC, etabin, phibin);
 	    RawTowerGeom *tower_geom = geomEM->get_tower_geometry(geomkey); //encode tower geometry
-	    if(_debug) cout << "Tower geom: " << tower_geom << endl;
+	    //if(_debug) cout << "Tower geom: " << tower_geom << endl;
 	    emcalt[sectorem] = time; //store time value
-	    emcaladc[sectorem] = towersEMuc->get_tower_at_channel(i)->get_energy(); //emcal ADC value (uncalibrated "energy")
+	    if(!_dataormc) emcaladc[sectorem] = towersEMuc->get_tower_at_channel(i)->get_energy(); //emcal ADC value (uncalibrated "energy")
 	    emcalpos[sectorem][0] = tower_geom->get_center_x(); //get positions of towers
 	    emcalpos[sectorem][1] = tower_geom->get_center_y();
 	    emcalpos[sectorem][2] = tower_geom->get_center_z();
@@ -208,6 +218,7 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	    emcalphibin[sectorem] = phibin;
 	    sectorem++;
 	  }
+	if(_debug) cout << sectorem << endl;
       }
     if(_debug) cout << "Getting OHCal info" << endl;
     if(towersOH) //essentially the same as for EMCal, just with fewer sectors and named OH
@@ -226,7 +237,7 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	    const RawTowerDefs::keytype geomkey = RawTowerDefs::encode_towerid(RawTowerDefs::CalorimeterId::HCALOUT, etabin, phibin);
 	    RawTowerGeom *tower_geom = geomOH->get_tower_geometry(geomkey);
 	    ohcalt[sectoroh] = time;
-	    ohcaladc[sectoroh] = towersOHuc->get_tower_at_channel(i)->get_energy();
+	    if(!_dataormc) ohcaladc[sectoroh] = towersOHuc->get_tower_at_channel(i)->get_energy();
 	    ohcalpos[sectoroh][0] = tower_geom->get_center_x();
 	    ohcalpos[sectoroh][1] = tower_geom->get_center_y();
 	    ohcalpos[sectoroh][2] = tower_geom->get_center_z();
@@ -257,7 +268,7 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	    const RawTowerDefs::keytype geomkey = RawTowerDefs::encode_towerid(RawTowerDefs::CalorimeterId::HCALIN, etabin, phibin);
 	    RawTowerGeom *tower_geom = geomIH->get_tower_geometry(geomkey);
 	    ihcalt[sectorih] = time;
-	    ihcaladc[sectorih] = towersIHuc->get_tower_at_channel(i)->get_energy();
+	    if(!_dataormc) ihcaladc[sectorih] = towersIHuc->get_tower_at_channel(i)->get_energy();
 	    ihcalpos[sectorih][0] = tower_geom->get_center_x();
 	    ihcalpos[sectorih][1] = tower_geom->get_center_y();
 	    ihcalpos[sectorih][2] = tower_geom->get_center_z();
@@ -328,6 +339,8 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
     }
   
   if(_debug) cout << "Filling" << endl;
+
+  if(_debug) cout << sectorem << endl;
 
   _tree->Fill();
   
