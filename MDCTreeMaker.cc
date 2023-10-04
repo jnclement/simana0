@@ -71,8 +71,6 @@ int MDCTreeMaker::Init(PHCompositeNode *topNode)
   _tree->Branch("sectorem",&sectorem,"sectorem/I"); //Number of hit sectors in the emcal
   _tree->Branch("sectorih",&sectorih,"sectorih/I"); // IHcal etc.
   _tree->Branch("sectoroh",&sectoroh,"sectoroh/I");
-  _tree->Branch("sectormb",&sectormb,"sectormb/I");
-  _tree->Branch("mbenrgy",mbenrgy,"mbenrgy[sectormb]/F"); //MBD reported value (could be charge or time)
   _tree->Branch("emcalen",emcalen,"emcalen[sectorem]/F"); //energy per EMCal sector
   _tree->Branch("ihcalen",ihcalen,"ihcalen[sectorih]/F"); // per IHCal sector (etc.)
   _tree->Branch("ohcalen",ohcalen,"ohcalen[sectoroh]/F");
@@ -82,18 +80,20 @@ int MDCTreeMaker::Init(PHCompositeNode *topNode)
   _tree->Branch("emcalphibin",emcalphibin,"emcalphibin[sectorem]/I"); //phi of EMCal sector
   _tree->Branch("ihcalphibin",ihcalphibin,"ihcalphibin[sectorih]/I");
   _tree->Branch("ohcalphibin",ohcalphibin,"ihcalphibin[sectoroh]/I");
-  _tree->Branch("mbdtype",mbdtype,"mbdtype[sectormb]/I"); //MBD type (charge or time)
-  _tree->Branch("mbdside",mbdside,"mbdside[sectormb]/I"); //MBD side (N/S)
-  _tree->Branch("mbdchan",mbdchan,"mbdchan[sectormb]/I"); //MBD channel number (0-63 on each side)
-  _tree->Branch("emcalt",emcalt,"emcalt[sectorem]/I"); //time value of EMCal sector
-  _tree->Branch("ihcalt",ihcalt,"ihcalt[sectorih]/I");
-  _tree->Branch("ohcalt",ohcalt,"ohcalt[sectoroh]/I");
 
   if(!_dataormc)
     {
+      _tree->Branch("emcalt",emcalt,"emcalt[sectorem]/I"); //time value of EMCal sector
+      _tree->Branch("ihcalt",ihcalt,"ihcalt[sectorih]/I");
+      _tree->Branch("ohcalt",ohcalt,"ohcalt[sectoroh]/I");
+      _tree->Branch("sectormb",&sectormb,"sectormb/I");
+      _tree->Branch("mbenrgy",mbenrgy,"mbenrgy[sectormb]/F"); //MBD reported value (could be charge or time)
       _tree->Branch("emcaladc",emcaladc,"emcaladc[sectorem]/I"); //time value of EMCal sector
       _tree->Branch("ihcaladc",ihcaladc,"ihcaladc[sectorih]/I");
       _tree->Branch("ohcaladc",ohcaladc,"ohcaladc[sectoroh]/I");
+      _tree->Branch("mbdtype",mbdtype,"mbdtype[sectormb]/I"); //MBD type (charge or time)
+      _tree->Branch("mbdside",mbdside,"mbdside[sectormb]/I"); //MBD side (N/S)
+      _tree->Branch("mbdchan",mbdchan,"mbdchan[sectormb]/I"); //MBD channel number (0-63 on each side)
     }
   _tree->Branch("ihcalpos",ihcalpos,"ihcalpos[sectorih][3]/F"); //position (xyz) of EMCal sector center
   _tree->Branch("emcalpos",emcalpos,"emcalpos[sectorem][3]/F");
@@ -108,8 +108,8 @@ int MDCTreeMaker::Init(PHCompositeNode *topNode)
       _tree->Branch("npart",&npart,"npart/I");
       _tree->Branch("ncoll",&ncoll,"ncoll/I");
       _tree->Branch("bimp",&bimp,"bimp/F");
-      _tree->Branch("truth_vtx",truth_vtx,"truth_vtx[truth_vertices][3]/F");
-      _tree->Branch("vtx_id",vtx_id,"vtx_id[truth_vertices]/I");
+      _tree->Branch("truth_vtx",truth_vtx,"truth_vtx[3]/F");
+      _tree->Branch("vtx_id",&vtx_id,"vtx_id/I");
     }
   return Fun4AllReturnCodes::EVENT_OK;
 }
@@ -164,8 +164,16 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
     
     GlobalVertexMap *vertexmap = findNode::getClass<GlobalVertexMap>(topNode,"GlobalVertexMap");
     if(_debug) cout << "Checking that all necessary objects exist" << endl;
-    if(!towersEM || !towersIH || !towersOH || !geomEM || !geomIH || !geomOH || !vertexmap) return Fun4AllReturnCodes::EVENT_OK; //remove events which do not have all required information
-    if(_dataormc && (!towersIHuc || !towersEMuc || !towersOHuc)) return Fun4AllReturnCodes::EVENT_OK;
+    if(!towersEM || !towersIH || !towersOH || !geomEM || !geomIH || !geomOH || !vertexmap)
+      {
+	cout << "em/ih/oh/gem/gih/goh/vtx: " << towersEM << " " << towersIH << " " << towersOH << " " << geomEM << " " << geomIH << " " << geomOH << " " << vertexmap << endl;
+	return Fun4AllReturnCodes::EVENT_OK; //remove events which do not have all required information
+      }
+    if(!_dataormc && (!towersIHuc || !towersEMuc || !towersOHuc || !towersMB))
+      {
+	cout << "uce/uci/uco/mb: " << " " << towersEMuc << " " << towersIHuc << " " << towersOHuc << " " << towersMB << endl;
+	return Fun4AllReturnCodes::EVENT_OK;
+      }
     if(_debug) cout << "EM geomtry node: " << geomEM << endl;
     if(_debug) cout << "Getting vertex" << endl;
     auto iter = vertexmap->begin(); //z vertex getting
@@ -192,13 +200,14 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	    TowerInfov1 *tower = towersEM->get_tower_at_channel(i); //get EMCal tower
 	    //if(_debug) cout << "Tower " << i << ": " << tower << endl;
  	    int key = towersEM->encode_key(i);
-	    int time = towersEM->get_tower_at_channel(i)->get_time(); //get uncalibrated tower
+	    int time = towersEM->get_tower_at_channel(i)->get_time(); //get time
 	    
-	    if(time > 7 || time < 5)
+	    if(!_dataormc && (time > 7 || time < 5))
 	      {
-		//cout << time << endl;
-		continue; //timing cu
+		if(_debug > 2) cout << time << endl;
+		continue; //timing cut
 	      }
+	    if(_debug > 2) cout << "i/time: " << i << " " << time << endl;
 	    int etabin = towersEM->getTowerEtaBin(key); //get eta and phi indices
 	    int phibin = towersEM->getTowerPhiBin(key);
 	    emcalen[sectorem] = tower->get_energy(); //actual tower energy (calibrated)
@@ -229,7 +238,7 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	    TowerInfov1 *tower = towersOH->get_tower_at_channel(i);
 	    int time = towersOH->get_tower_at_channel(i)->get_time();
 	    
-	    if(time > 8 || time < 5) continue;
+	    if(!_dataormc && (time > 8 || time < 5)) continue;
 	    int key = towersOH->encode_key(i);
 	    int etabin = towersOH->getTowerEtaBin(key);
 	    int phibin = towersOH->getTowerPhiBin(key);
@@ -260,7 +269,7 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	    TowerInfov1 *tower = towersIH->get_tower_at_channel(i);
 	    int time = towersIH->get_tower_at_channel(i)->get_time();
 
-	    if(time > 7 || time < 5) continue;
+	    if(!_dataormc && (time > 7 || time < 5)) continue;
 	    int key = towersIH->encode_key(i);
 	    int etabin = towersIH->getTowerEtaBin(key);
 	    int phibin = towersIH->getTowerPhiBin(key);
@@ -283,7 +292,7 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	  }
       }
     if(_debug) cout << "Getting MBD info" << endl;
-    if(towersMB) //get MBD info
+    if(towersMB && !_dataormc) //get MBD info
       {
 	int nchannels = 256;
 	for(int i=0; i<nchannels; ++i)
@@ -301,13 +310,13 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	    sectormb++;
 	  }
       }
-    else
+    else if(!_dataormc)
       {
 	cout << "no MBD towers!!!" << endl;
       }
   } 
   
-  if(_dataormc) //get collision parameteres for MC
+  if(_dataormc) //get collision parameters for MC
     {
       if(_debug) cout << "Getting event header info" << endl;
       EventHeaderv1 *event_header = findNode::getClass<EventHeaderv1>(topNode, "EventHeader" );
@@ -317,24 +326,37 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	  ncoll = event_header->get_intval("ncoll");
 	  bimp = event_header->get_floatval("bimp");
 	}
+      else return Fun4AllReturnCodes::EVENT_OK;
       PHG4TruthInfoContainer *truthinfo = findNode::getClass<PHG4TruthInfoContainer>(topNode, "G4TruthInfo");
       if (!truthinfo && _debug) std::cout << PHWHERE << "PHG4TruthInfoContainer node is missing, can't collect additional truth particles"<< std::endl;
+      else if(!truthinfo) return Fun4AllReturnCodes::EVENT_OK;
+
   
       PHG4TruthInfoContainer::VtxRange vtxrange = truthinfo->GetVtxRange();
+      //if(vtxrange == 0) return Fun4AllReturnCodes::EVENT_OK;
       truth_vertices = 0;
       for (PHG4TruthInfoContainer::ConstVtxIterator iter = vtxrange.first; iter != vtxrange.second; ++iter)
 	{
 	  PHG4VtxPoint *vtx = iter->second;
-	  truth_vtx[truth_vertices][0] = vtx->get_x();
-	  truth_vtx[truth_vertices][1] = vtx->get_y();
-	  truth_vtx[truth_vertices][2] = vtx->get_z();
-	  vtx_id[truth_vertices] = vtx->get_id();
+	  if(!vtx && truth_vertices < 1)
+	    {
+	      return Fun4AllReturnCodes::EVENT_OK;
+	    }
+	  else if(!vtx)
+	    {
+	      break;
+	    }
+	  truth_vtx[0] = vtx->get_x();
+	  truth_vtx[1] = vtx->get_y();
+	  truth_vtx[2] = vtx->get_z();
+	  vtx_id = vtx->get_id();
 	  truth_vertices++;
-	  if(_debug && truth_vertices > 998)
+	  if(_debug && truth_vertices > 1)
 	    {
 	      cout << "Too many truth vertices!" << endl;
 	      break;
 	    }
+	  else if(truth_vertices > 1) break;
 	}
     }
   
