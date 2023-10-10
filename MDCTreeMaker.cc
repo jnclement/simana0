@@ -24,7 +24,6 @@
 #include <phhepmc/PHHepMCGenEventMap.h>
 #include <ffaobjects/EventHeaderv1.h>
 #include <g4main/PHG4TruthInfoContainer.h>
-
 #include <HepMC/GenEvent.h>
 
 #include <jetbackground/TowerBackgroundv1.h>
@@ -44,9 +43,10 @@
 
 using namespace std;
 //____________________________________________________________________________..
-MDCTreeMaker::MDCTreeMaker(const std::string &name, const int dataormc, const int debug):
+MDCTreeMaker::MDCTreeMaker(const std::string &name, const int dataormc, const int debug, const int correct):
   SubsysReco((name+"test").c_str())
 {
+  _correct = correct;
   _foutname = name;  
   _dataormc = dataormc;
   _debug = debug;
@@ -67,7 +67,9 @@ int MDCTreeMaker::Init(PHCompositeNode *topNode)
   
   _tree = new TTree("ttree","a persevering date tree");
   
-  _tree->Branch("track_vtx",track_vtx,"track_vtx[3]/F");
+  _tree->Branch("track_vtx",track_vtx,"track_vtx[3]/F"); //svtx and mbd vtx
+  _tree->Branch("mbd_vtx",mbd_vtx,"mbd_vtx[3]/F"); //mbd vtx
+  _tree->Branch("svtx_vtx",svtx_vtx,"svtx_vtx[3]/F"); //svtx only vtx
   _tree->Branch("sectorem",&sectorem,"sectorem/I"); //Number of hit sectors in the emcal
   _tree->Branch("sectorih",&sectorih,"sectorih/I"); // IHcal etc.
   _tree->Branch("sectoroh",&sectoroh,"sectoroh/I");
@@ -80,6 +82,7 @@ int MDCTreeMaker::Init(PHCompositeNode *topNode)
   _tree->Branch("emcalphibin",emcalphibin,"emcalphibin[sectorem]/I"); //phi of EMCal sector
   _tree->Branch("ihcalphibin",ihcalphibin,"ihcalphibin[sectorih]/I");
   _tree->Branch("ohcalphibin",ohcalphibin,"ihcalphibin[sectoroh]/I");
+
 
   if(!_dataormc)
     {
@@ -176,21 +179,53 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
       }
     if(_debug) cout << "EM geomtry node: " << geomEM << endl;
     if(_debug) cout << "Getting vertex" << endl;
+    if(_debug)
+      {
+	int mapnum = 0;
+	for(auto j=vertexmap->begin(); j!=vertexmap->end(); ++j)
+	  {
+	    int vtxnum = 0;
+	    GlobalVertex *vtx = j->second;
+	    cout << "Mapnum/vtx/z: " << mapnum << " " << vtx << " " << vtx->get_z() << endl;
+	    for(auto i= vtx->begin_vtxids(); i!=vtx->end_vtxids(); ++i)
+	      {
+		cout << "mapnum/vtxnum/type/id/x/y/z: "<< mapnum << " " <<vtxnum << " " << i->first << " " << i->second << endl;
+		vtxnum++;
+	      }
+	    mapnum++;
+	  }
+      }
+    
     auto iter = vertexmap->begin(); //z vertex getting
-    if(iter != vertexmap->end()) {
-      GlobalVertex *vtx = iter->second;
-      track_vtx[0] = vtx->get_x();
-      track_vtx[1] = vtx->get_y();
-      track_vtx[2] = vtx->get_z();
-      if (track_vtx[0] == 0 && track_vtx[1] == 0 && track_vtx[2] == 0) { //remove anything with identically zero vertex (errors)
+    if(iter != vertexmap->end()) 
+      {
+	GlobalVertex *vtx = iter->second;
+	
+	if(_debug && !vtx) cout << "No vtx found" << endl;
+	if(_debug && vtx) cout << "zvtx: " << vtx->get_z() << endl;
+	if(vtx)
+	  {
+	    track_vtx[0] = vtx->get_x();
+	    track_vtx[1] = vtx->get_y();
+	    track_vtx[2] = vtx->get_z();
+	    if (track_vtx[0] == 0 && track_vtx[1] == 0 && track_vtx[2] == 0) 
+	      { //remove anything with identically zero vertex (errors)
+		return Fun4AllReturnCodes::EVENT_OK;
+	      }
+	    if (fabs(track_vtx[2]) > 30.0) 
+	      { //cut on 30 - may widen in the future
+		return Fun4AllReturnCodes::EVENT_OK;
+	      }
+	  } 
+	else 
+	  {
+	    return Fun4AllReturnCodes::EVENT_OK;
+	  }
+      }
+    else
+      {
 	return Fun4AllReturnCodes::EVENT_OK;
       }
-      if (fabs(track_vtx[2]) > 30.0) { //cut on 30 - may widen in the future
-	return Fun4AllReturnCodes::EVENT_OK;
-      }
-    } else {
-      return Fun4AllReturnCodes::EVENT_OK;
-    }
     if(_debug) cout << "Getting EMCal info" << endl;
     if(towersEM) //get EMCal values
       {
@@ -222,7 +257,11 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	    double newz = emcalpos[sectorem][2] - track_vtx[2];
 	    double newx = emcalpos[sectorem][0] - track_vtx[1];
 	    double newy = emcalpos[sectorem][1] - track_vtx[0];
-	    emetacor[sectorem] = asinh(newz/sqrt(newx*newx+newy*newy));
+	    double oldx = tower_geom->get_center_x();
+	    double oldy = tower_geom->get_center_y();
+	    double oldz = tower_geom->get_center_z();
+	    double neweta = (_correct?asinh(newz/sqrt(newx*newx+newy*newy)):asinh(oldz/sqrt(oldx*oldx+oldy*oldy)));
+	    emetacor[sectorem] = neweta;
 	    emcaletabin[sectorem] = etabin; //get eta and phi of towers
 	    emcalphibin[sectorem] = phibin;
 	    sectorem++;
@@ -253,7 +292,11 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	    double newz = ohcalpos[sectoroh][2] - track_vtx[2];
 	    double newx = ohcalpos[sectoroh][0] - track_vtx[1];
 	    double newy = ohcalpos[sectoroh][1] - track_vtx[0];
-	    ohetacor[sectoroh] = asinh(newz/sqrt(newx*newx+newy*newy));
+	    double oldx = tower_geom->get_center_x();
+	    double oldy = tower_geom->get_center_y();
+	    double oldz = tower_geom->get_center_z();
+	    double neweta = (_correct?asinh(newz/sqrt(newx*newx+newy*newy)):asinh(oldz/sqrt(oldx*oldx+oldy*oldy)));
+	    ohetacor[sectoroh] = neweta;
 
 	    ohcaletabin[sectoroh] = etabin;
 	    ohcalphibin[sectoroh] = phibin;
@@ -284,7 +327,11 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	    double newz = ihcalpos[sectorih][2] - track_vtx[2];
 	    double newx = ihcalpos[sectorih][0] - track_vtx[1];
 	    double newy = ihcalpos[sectorih][1] - track_vtx[0];
-	    ihetacor[sectorih] = asinh(newz/sqrt(newx*newx+newy*newy));
+	    double oldx = tower_geom->get_center_x();
+	    double oldy = tower_geom->get_center_y();
+	    double oldz = tower_geom->get_center_z();
+	    double neweta = (_correct?asinh(newz/sqrt(newx*newx+newy*newy)):asinh(oldz/sqrt(oldx*oldx+oldy*oldy)));
+	    ihetacor[sectorih] = neweta;
 
 	    ihcaletabin[sectorih] = etabin;
 	    ihcalphibin[sectorih] = phibin;
@@ -314,7 +361,7 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
       {
 	cout << "no MBD towers!!!" << endl;
       }
-  } 
+    } 
   
   if(_dataormc) //get collision parameters for MC
     {

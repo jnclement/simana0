@@ -15,7 +15,7 @@ class MDCTreeMaker : public SubsysReco
 {
  public:
 
-  MDCTreeMaker(const std::string &name = "MDCTreeMaker", const int dataormc = 0, const int debug = 1);
+  MDCTreeMaker(const std::string &name = "MDCTreeMaker", const int dataormc = 0, const int debug = 1, const int correct = 1);
 
   virtual ~MDCTreeMaker();
 
@@ -37,7 +37,7 @@ class MDCTreeMaker : public SubsysReco
 
 
  private:
-
+  int _correct;
   int _debug;
   int _dataormc;
   TFile *_f;
@@ -74,6 +74,8 @@ class MDCTreeMaker : public SubsysReco
   float bimp;
   int truth_vertices;
   float track_vtx[3];
+  float svtx_vtx[3];
+  float mbd_vtx[3];
   float truth_vtx[3];
   int vtx_id;
   float emetacor[24576];
