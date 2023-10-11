@@ -107,6 +107,12 @@ int MDCTreeMaker::Init(PHCompositeNode *topNode)
 
   if(_dataormc) //get collision parameters for MC
     {
+      _tree->Branch("truthpar_n",&truthpar_n,"truthpar_n/I");
+      _tree->Branch("truthpar_pz",truthpar_pz,"truthpar_pz[100000]/F");
+      _tree->Branch("truthpar_pt",truthpar_pt,"truthpar_pt[100000]/F");
+      _tree->Branch("truthpar_e",truthpar_e,"truthpar_e[100000]/F");
+      _tree->Branch("truthpar_eta",truthpar_eta,"truthpar_eta[100000]/F");
+      _tree->Branch("truthpar_phi",truthpar_phi,"truthpar_phi[100000]/F");
       _tree->Branch("truth_vertices",&truth_vertices,"truth_vertices/I");
       _tree->Branch("npart",&npart,"npart/I");
       _tree->Branch("ncoll",&ncoll,"ncoll/I");
@@ -365,6 +371,33 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
   
   if(_dataormc) //get collision parameters for MC
     {
+      PHG4TruthInfoContainer *truthinfo = findNode::getClass<PHG4TruthInfoContainer>(topNode, "G4TruthInfo");
+      if (!truthinfo && _debug) std::cout << PHWHERE << "PHG4TruthInfoContainer node is missing, can't collect G4 truth particles"<< std::endl;
+      if (!truthinfo) return Fun4AllReturnCodes::EVENT_OK;
+      PHG4TruthInfoContainer::Range range = truthinfo->GetPrimaryParticleRange();
+      truthpar_n = 0;
+      for (PHG4TruthInfoContainer::ConstIterator iter = range.first; iter != range.second; ++iter)
+	{
+	  
+	  // Get truth particle
+	  const PHG4Particle *truth = iter->second;
+	  if (!truthinfo->is_primary(truth)) continue;
+	  
+	  /// Get this particles momentum, etc.
+	  truthpar_pt[truthpar_n] = sqrt(truth->get_px() * truth->get_px()
+					 + truth->get_py() * truth->get_py());
+	  truthpar_pz[truthpar_n] = truth->get_pz();
+	  truthpar_e[truthpar_n] = truth->get_e();
+	  truthpar_phi[truthpar_n] = atan2(truth->get_py(), truth->get_px());
+	  truthpar_eta[truthpar_n] = atanh(truth->get_pz() / sqrt(truth->get_px()*truth->get_px()+truth->get_py()*truth->get_py()+truth->get_pz()*truth->get_pz()));
+	  if (truthpar_eta[truthpar_n] != truthpar_eta[truthpar_n]) truthpar_eta[truthpar_n] = -999; // check for nans
+	  truthpar_n++;
+	  if(truthpar_n > 99999)
+	    {
+	      if(_debug) cout << "More than 100000 truth particles!" << endl;
+	      return Fun4AllReturnCodes::EVENT_OK;
+	    }
+	}
       if(_debug) cout << "Getting event header info" << endl;
       EventHeaderv1 *event_header = findNode::getClass<EventHeaderv1>(topNode, "EventHeader" );
       if ( event_header )
@@ -374,7 +407,6 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	  bimp = event_header->get_floatval("bimp");
 	}
       else return Fun4AllReturnCodes::EVENT_OK;
-      PHG4TruthInfoContainer *truthinfo = findNode::getClass<PHG4TruthInfoContainer>(topNode, "G4TruthInfo");
       if (!truthinfo && _debug) std::cout << PHWHERE << "PHG4TruthInfoContainer node is missing, can't collect additional truth particles"<< std::endl;
       else if(!truthinfo) return Fun4AllReturnCodes::EVENT_OK;
 
