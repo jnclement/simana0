@@ -183,21 +183,24 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
     if(_debug) cout << "EM geomtry node: " << geomEM << endl;
     if(_debug) cout << "Getting vertex" << endl;
     int mapnum = 0;
-    for(auto j=vertexmap->begin(); j!=vertexmap->end(); ++j)
+    auto j=vertexmap->begin();
+    if(j!=vertexmap->end())
       {
 	int vtxnum = 0;
 	GlobalVertex *vtx = j->second;
 	if(vtx)
 	  {
 	    track_vtx[0] = vtx->get_x();
-	    track_vtx[0] = vtx->get_x();
-	    track_vtx[0] = vtx->get_x();
+	    track_vtx[1] = vtx->get_y();
+	    track_vtx[2] = vtx->get_z();
 	    if (track_vtx[0] == 0 && track_vtx[1] == 0 && track_vtx[2] == 0) 
 	      { //remove anything with identically zero vertex (errors)
+		if(_debug) cout << "zvtx: " << track_vtx[2] << " Vertex identically 0, skipping event" << endl;
 		return Fun4AllReturnCodes::EVENT_OK;
 	      }
 	    if (fabs(track_vtx[2]) > 50.0) 
 	      { //cut on 50 - may widen in the future
+		if(_debug) cout << "Vertex outside of 50 cm, skipping event" << endl;
 		return Fun4AllReturnCodes::EVENT_OK;
 	      }
 	  }
