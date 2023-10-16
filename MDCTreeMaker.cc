@@ -113,12 +113,10 @@ int MDCTreeMaker::Init(PHCompositeNode *topNode)
       _tree->Branch("truthpar_e",truthpar_e,"truthpar_e[100000]/F");
       _tree->Branch("truthpar_eta",truthpar_eta,"truthpar_eta[100000]/F");
       _tree->Branch("truthpar_phi",truthpar_phi,"truthpar_phi[100000]/F");
-      _tree->Branch("truth_vertices",&truth_vertices,"truth_vertices/I");
       _tree->Branch("npart",&npart,"npart/I");
       _tree->Branch("ncoll",&ncoll,"ncoll/I");
       _tree->Branch("bimp",&bimp,"bimp/F");
       _tree->Branch("truth_vtx",truth_vtx,"truth_vtx[3]/F");
-      _tree->Branch("vtx_id",&vtx_id,"vtx_id/I");
     }
   return Fun4AllReturnCodes::EVENT_OK;
 }
@@ -192,10 +190,11 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	  {
 	    int vtxnum = 0;
 	    GlobalVertex *vtx = j->second;
-	    cout << "Mapnum/vtx/z: " << mapnum << " " << vtx << " " << vtx->get_z() << endl;
+	    
+	    if(_debug) cout << "Mapnum/vtx/z: " << mapnum << " " << vtx << " " << vtx->get_z() << endl;
 	    for(auto i= vtx->begin_vtxids(); i!=vtx->end_vtxids(); ++i)
 	      {
-		cout << "mapnum/vtxnum/type/id/x/y/z: "<< mapnum << " " <<vtxnum << " " << i->first << " " << i->second << endl;
+		if(_debug) cout << "mapnum/vtxnum/type/id/x/y/z: "<< mapnum << " " <<vtxnum << " " << i->first << " " << i->second << endl;
 		vtxnum++;
 	      }
 	    mapnum++;
@@ -205,8 +204,13 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
     auto iter = vertexmap->begin(); //z vertex getting
     if(iter != vertexmap->end()) 
       {
-	GlobalVertex *vtx = iter->second;
-	
+	//GlobalVertex *vtx = iter->second;
+	GlobalVertex *vtx = vertexmap->get(GlobalVertex::BBC);
+	if(!vtx)
+	  {
+	    if(_debug) cout << "no VTX!" << endl;
+	  }
+	if(_debug) vertexmap->identify();
 	if(_debug && !vtx) cout << "No vtx found" << endl;
 	if(_debug && vtx) cout << "zvtx: " << vtx->get_z() << endl;
 	if(vtx)
@@ -410,32 +414,26 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
       if (!truthinfo && _debug) std::cout << PHWHERE << "PHG4TruthInfoContainer node is missing, can't collect additional truth particles"<< std::endl;
       else if(!truthinfo) return Fun4AllReturnCodes::EVENT_OK;
 
-  
-      PHG4TruthInfoContainer::VtxRange vtxrange = truthinfo->GetVtxRange();
-      //if(vtxrange == 0) return Fun4AllReturnCodes::EVENT_OK;
-      truth_vertices = 0;
-      for (PHG4TruthInfoContainer::ConstVtxIterator iter = vtxrange.first; iter != vtxrange.second; ++iter)
+      PHHepMCGenEventMap *phg = findNode::getClass<PHHepMCGenEventMap>(topNode, "PHHepMCGenEventMap");
+      if(phg)
 	{
-	  PHG4VtxPoint *vtx = iter->second;
-	  if(!vtx && truth_vertices < 1)
+	  PHHepMCGenEvent *phe = (PHHepMCGenEvent*) phg->get(0);
+	  if(phe)
 	    {
-	      return Fun4AllReturnCodes::EVENT_OK;
+	      truth_vtx[0] = phe->get_collision_vertex().x();
+	      truth_vtx[1] = phe->get_collision_vertex().y();
+	      truth_vtx[2] = phe->get_collision_vertex().z();
 	    }
-	  else if(!vtx)
+	  else
 	    {
-	      break;
+	       if(_debug) cout << "no PHHepMCGenEvent found for truth vertex getting" << endl;
+	       return Fun4AllReturnCodes::EVENT_OK;
 	    }
-	  truth_vtx[0] = vtx->get_x();
-	  truth_vtx[1] = vtx->get_y();
-	  truth_vtx[2] = vtx->get_z();
-	  vtx_id = vtx->get_id();
-	  truth_vertices++;
-	  if(_debug && truth_vertices > 1)
-	    {
-	      cout << "Too many truth vertices!" << endl;
-	      break;
-	    }
-	  else if(truth_vertices > 1) break;
+	}
+      else
+	{
+	  if(_debug) cout << "no PHHepMCGenEventMap found for truth vertex getting" << endl;
+	  return Fun4AllReturnCodes::EVENT_OK;
 	}
     }
   
