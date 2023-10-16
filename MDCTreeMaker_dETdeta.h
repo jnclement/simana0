@@ -80,17 +80,11 @@ class MDCTreeMaker : public SubsysReco
   float ihetacor[1536];
   float ohetacor[1536];
   int truthpar_n;
-  int truthpar_nh;
   float truthpar_pz[100000];
   float truthpar_pt[100000];
   float truthpar_e[100000];
   float truthpar_eta[100000];
   float truthpar_phi[100000];
-  float truthparh_e[100000];
-  float truthparh_pt[100000];
-  float truthparh_pz[100000];
-  float truthparh_eta[100000];
-  float truthparh_phi[100000];
 };
 
 #endif // MDCTREEMAKER

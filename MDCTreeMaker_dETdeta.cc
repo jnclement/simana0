@@ -16,8 +16,7 @@
 #include <g4main/PHG4Particle.h>
 #include <bbc/BbcPmtContainer.h>
 #include <fun4all/Fun4AllReturnCodes.h>
-#include <PHHepMCGenEventMap.h>
-#include <PHHepMCGenEvent.h>
+
 #include <phool/PHCompositeNode.h>
 #include <phool/PHRandomSeed.h>
 #include <phool/getClass.h>
@@ -108,22 +107,15 @@ int MDCTreeMaker::Init(PHCompositeNode *topNode)
   if(_dataormc) //get collision parameters for MC
     {
       _tree->Branch("truthpar_n",&truthpar_n,"truthpar_n/I");
-      _tree->Branch("truthpar_pz",truthpar_pz,"truthpar_pz[truthpar_n]/F");
-      _tree->Branch("truthpar_pt",truthpar_pt,"truthpar_pt[truthpar_n]/F");
-      _tree->Branch("truthpar_e",truthpar_e,"truthpar_e[truthpar_n]/F");
-      _tree->Branch("truthpar_eta",truthpar_eta,"truthpar_eta[truthpar_n]/F");
-      _tree->Branch("truthpar_phi",truthpar_phi,"truthpar_phi[truthpar_n]/F");
+      _tree->Branch("truthpar_pz",truthpar_pz,"truthpar_pz[100000]/F");
+      _tree->Branch("truthpar_pt",truthpar_pt,"truthpar_pt[100000]/F");
+      _tree->Branch("truthpar_e",truthpar_e,"truthpar_e[100000]/F");
+      _tree->Branch("truthpar_eta",truthpar_eta,"truthpar_eta[100000]/F");
+      _tree->Branch("truthpar_phi",truthpar_phi,"truthpar_phi[100000]/F");
       _tree->Branch("npart",&npart,"npart/I");
       _tree->Branch("ncoll",&ncoll,"ncoll/I");
       _tree->Branch("bimp",&bimp,"bimp/F");
       _tree->Branch("truth_vtx",truth_vtx,"truth_vtx[3]/F");
-      _tree->Branch("truthpar_nh",&truthpar_nh,"truthpar_nh/I");
-      _tree->Branch("truthparh_pz",truthparh_pz,"truthparh_pz[truthpar_nh]/F");
-      _tree->Branch("truthparh_pt",truthparh_pt,"truthparh_pt[truthpar_nh]/F");
-      _tree->Branch("truthparh_e",truthparh_e,"truthparh_e[truthpar_nh]/F");
-      _tree->Branch("truthparh_eta",truthparh_eta,"truthparh_eta[truthpar_nh]/F");
-      _tree->Branch("truthparh_phi",truthparh_phi,"truthparh_phi[truthpar_nh]/F");
-
     }
   return Fun4AllReturnCodes::EVENT_OK;
 }
@@ -389,50 +381,6 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
   
   if(_dataormc) //get collision parameters for MC
     {
-      
-
-      PHHepMCGenEventMap *hepmceventmap = findNode::getClass<PHHepMCGenEventMap>(topNode, "PHHepMCGenEventMap");
-      if (!hepmceventmap)
-	{
-	  if(_debug) std::cout << PHWHERE << "HEPMC event map node is missing, can't collected HEPMC truth particles"<< std::endl;
-	  return Fun4AllReturnCodes::EVENT_OK;
-	}
-      for (PHHepMCGenEventMap::ConstIter eventIter = hepmceventmap->begin(); eventIter != hepmceventmap->end(); ++eventIter) {
-     
-	/// Get the event
-	PHHepMCGenEvent *hepmcevent = eventIter->second;
-      
-	// To fill TTree, require that the event be the primary event (embedding_id > 0)
-	if (hepmcevent && hepmcevent->get_embedding_id() == 0)
-	  {
-	    /// Get the event characteristics, inherited from HepMC classes
-	    HepMC::GenEvent *truthevent = hepmcevent->getEvent();
-	    if (!truthevent) {
-	      std::cout << PHWHERE
-			<< "no evt pointer under phhepmvgeneventmap found "
-			<< std::endl;
-	    }
-
-	    /// Loop over all the truth particles and get their information
-	    truthpar_nh = 0;
-	    for (HepMC::GenEvent::particle_const_iterator iter = truthevent->particles_begin(); iter != truthevent->particles_end(); ++iter) {
-	      if (!(*iter)->end_vertex() && (*iter)->status() == 1) {
-		truthparh_e[truthpar_nh] = (*iter)->momentum().e();
-		double px = (*iter)->momentum().px();
-		double py = (*iter)->momentum().py();
-		double pz = (*iter)->momentum().pz();
-		truthparh_pt[truthpar_nh] = sqrt(px*px+py*py);
-		truthparh_pz[truthpar_nh] = pz;
-		truthparh_phi[truthpar_nh]=atan2(py,px);
-		truthparh_eta[truthpar_nh]=atanh(pz/sqrt(px*px+py*py+pz*pz);
-		/// Fill the truth tree
-		truthpar_nh++;
-	      }
-	    }
-	    break;
-	  } 
-      }
-
 
       BbcPmtContainer *bbctow = findNode::getClass<BbcPmtContainer>(topNode, "BbcPmtContainer");
       if(!bbctow)
