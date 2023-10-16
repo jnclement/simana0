@@ -69,7 +69,6 @@ int MDCTreeMaker::Init(PHCompositeNode *topNode)
   
   _tree->Branch("track_vtx",track_vtx,"track_vtx[3]/F"); //svtx and mbd vtx
   _tree->Branch("mbd_vtx",mbd_vtx,"mbd_vtx[3]/F"); //mbd vtx
-  _tree->Branch("svtx_vtx",svtx_vtx,"svtx_vtx[3]/F"); //svtx only vtx
   _tree->Branch("sectorem",&sectorem,"sectorem/I"); //Number of hit sectors in the emcal
   _tree->Branch("sectorih",&sectorih,"sectorih/I"); // IHcal etc.
   _tree->Branch("sectoroh",&sectoroh,"sectoroh/I");
@@ -190,7 +189,17 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	  {
 	    int vtxnum = 0;
 	    GlobalVertex *vtx = j->second;
-	    
+	    if(vtx)
+	      {
+		track_vtx[0] = vtx->get_x();
+		track_vtx[0] = vtx->get_x();
+		track_vtx[0] = vtx->get_x();
+	      }
+	    else
+	      {
+		if(_debug) cout << "NO VERTEX FOUND IN GLOBALVERTEXMAP AT ALL! CANCEL EVENT" << endl;
+		return Fun4AllReturnCodes::EVENT_OK;
+	      }
 	    if(_debug) cout << "Mapnum/vtx/z: " << mapnum << " " << vtx << " " << vtx->get_z() << endl;
 	    for(auto i= vtx->begin_vtxids(); i!=vtx->end_vtxids(); ++i)
 	      {
@@ -215,9 +224,9 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	if(_debug && vtx) cout << "zvtx: " << vtx->get_z() << endl;
 	if(vtx)
 	  {
-	    track_vtx[0] = vtx->get_x();
-	    track_vtx[1] = vtx->get_y();
-	    track_vtx[2] = vtx->get_z();
+	    mbd_vtx[0] = vtx->get_x();
+	    mbd_vtx[1] = vtx->get_y();
+	    mbd_vtx[2] = vtx->get_z();
 	    if (track_vtx[0] == 0 && track_vtx[1] == 0 && track_vtx[2] == 0) 
 	      { //remove anything with identically zero vertex (errors)
 		return Fun4AllReturnCodes::EVENT_OK;
