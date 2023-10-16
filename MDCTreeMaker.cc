@@ -182,40 +182,37 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
       }
     if(_debug) cout << "EM geomtry node: " << geomEM << endl;
     if(_debug) cout << "Getting vertex" << endl;
-    if(_debug)
+    int mapnum = 0;
+    for(auto j=vertexmap->begin(); j!=vertexmap->end(); ++j)
       {
-	int mapnum = 0;
-	for(auto j=vertexmap->begin(); j!=vertexmap->end(); ++j)
+	int vtxnum = 0;
+	GlobalVertex *vtx = j->second;
+	if(vtx)
 	  {
-	    int vtxnum = 0;
-	    GlobalVertex *vtx = j->second;
-	    if(vtx)
-	      {
-		track_vtx[0] = vtx->get_x();
-		track_vtx[0] = vtx->get_x();
-		track_vtx[0] = vtx->get_x();
-		if (track_vtx[0] == 0 && track_vtx[1] == 0 && track_vtx[2] == 0) 
-		  { //remove anything with identically zero vertex (errors)
-		    return Fun4AllReturnCodes::EVENT_OK;
-		  }
-		if (fabs(track_vtx[2]) > 50.0) 
-		  { //cut on 50 - may widen in the future
-		    return Fun4AllReturnCodes::EVENT_OK;
-		  }
-	      }
-	    else
-	      {
-		if(_debug) cout << "NO VERTEX FOUND IN GLOBALVERTEXMAP AT ALL! CANCEL EVENT" << endl;
+	    track_vtx[0] = vtx->get_x();
+	    track_vtx[0] = vtx->get_x();
+	    track_vtx[0] = vtx->get_x();
+	    if (track_vtx[0] == 0 && track_vtx[1] == 0 && track_vtx[2] == 0) 
+	      { //remove anything with identically zero vertex (errors)
 		return Fun4AllReturnCodes::EVENT_OK;
 	      }
-	    if(_debug) cout << "Mapnum/vtx/z: " << mapnum << " " << vtx << " " << vtx->get_z() << endl;
-	    for(auto i= vtx->begin_vtxids(); i!=vtx->end_vtxids(); ++i)
-	      {
-		if(_debug) cout << "mapnum/vtxnum/type/id/x/y/z: "<< mapnum << " " <<vtxnum << " " << i->first << " " << i->second << endl;
-		vtxnum++;
+	    if (fabs(track_vtx[2]) > 50.0) 
+	      { //cut on 50 - may widen in the future
+		return Fun4AllReturnCodes::EVENT_OK;
 	      }
-	    mapnum++;
 	  }
+	else
+	  {
+	    if(_debug) cout << "NO VERTEX FOUND IN GLOBALVERTEXMAP AT ALL! CANCEL EVENT" << endl;
+	    return Fun4AllReturnCodes::EVENT_OK;
+	  }
+	if(_debug) cout << "Mapnum/vtx/z: " << mapnum << " " << vtx << " " << vtx->get_z() << endl;
+	for(auto i= vtx->begin_vtxids(); i!=vtx->end_vtxids(); ++i)
+	  {
+	    if(_debug) cout << "mapnum/vtxnum/type/id/x/y/z: "<< mapnum << " " <<vtxnum << " " << i->first << " " << i->second << endl;
+	    vtxnum++;
+	  }
+	mapnum++;
       }
     
     auto iter = vertexmap->begin(); //z vertex getting
