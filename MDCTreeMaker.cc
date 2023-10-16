@@ -195,6 +195,15 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 		track_vtx[0] = vtx->get_x();
 		track_vtx[0] = vtx->get_x();
 	      }
+	    if (track_vtx[0] == 0 && track_vtx[1] == 0 && track_vtx[2] == 0) 
+	      { //remove anything with identically zero vertex (errors)
+		return Fun4AllReturnCodes::EVENT_OK;
+	      }
+	    if (fabs(track_vtx[2]) > 50.0) 
+	      { //cut on 50 - may widen in the future
+		return Fun4AllReturnCodes::EVENT_OK;
+	      }
+
 	    else
 	      {
 		if(_debug) cout << "NO VERTEX FOUND IN GLOBALVERTEXMAP AT ALL! CANCEL EVENT" << endl;
@@ -217,34 +226,23 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	GlobalVertex *vtx = vertexmap->get(GlobalVertex::BBC);
 	if(!vtx)
 	  {
-	    if(_debug) cout << "no VTX!" << endl;
+	    if(_debug) cout << "no MBD VTX!" << endl;
 	  }
 	if(_debug) vertexmap->identify();
-	if(_debug && !vtx) cout << "No vtx found" << endl;
 	if(_debug && vtx) cout << "zvtx: " << vtx->get_z() << endl;
 	if(vtx)
 	  {
 	    mbd_vtx[0] = vtx->get_x();
 	    mbd_vtx[1] = vtx->get_y();
 	    mbd_vtx[2] = vtx->get_z();
-	    if (track_vtx[0] == 0 && track_vtx[1] == 0 && track_vtx[2] == 0) 
-	      { //remove anything with identically zero vertex (errors)
-		return Fun4AllReturnCodes::EVENT_OK;
-	      }
-	    if (fabs(track_vtx[2]) > 30.0) 
-	      { //cut on 30 - may widen in the future
-		return Fun4AllReturnCodes::EVENT_OK;
-	      }
 	  } 
-	else 
-	  {
-	    return Fun4AllReturnCodes::EVENT_OK;
-	  }
       }
+    /*
     else
       {
 	return Fun4AllReturnCodes::EVENT_OK;
       }
+    */
     if(_debug) cout << "Getting EMCal info" << endl;
     if(towersEM) //get EMCal values
       {
