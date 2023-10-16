@@ -14,7 +14,7 @@
 #include <g4main/PHG4VtxPoint.h>
 #include <g4main/PHG4TruthInfoContainer.h>
 #include <g4main/PHG4Particle.h>
-
+#include <bbc/BbcPmtContainer.h>
 #include <fun4all/Fun4AllReturnCodes.h>
 
 #include <phool/PHCompositeNode.h>
@@ -81,15 +81,15 @@ int MDCTreeMaker::Init(PHCompositeNode *topNode)
   _tree->Branch("emcalphibin",emcalphibin,"emcalphibin[sectorem]/I"); //phi of EMCal sector
   _tree->Branch("ihcalphibin",ihcalphibin,"ihcalphibin[sectorih]/I");
   _tree->Branch("ohcalphibin",ohcalphibin,"ihcalphibin[sectoroh]/I");
-
+  _tree->Branch("sectormb",&sectormb,"sectormb/I");
+  _tree->Branch("mbenrgy",mbenrgy,"mbenrgy[sectormb]/F"); //MBD reported value (could be charge or time)
 
   if(!_dataormc)
     {
       _tree->Branch("emcalt",emcalt,"emcalt[sectorem]/I"); //time value of EMCal sector
       _tree->Branch("ihcalt",ihcalt,"ihcalt[sectorih]/I");
       _tree->Branch("ohcalt",ohcalt,"ohcalt[sectoroh]/I");
-      _tree->Branch("sectormb",&sectormb,"sectormb/I");
-      _tree->Branch("mbenrgy",mbenrgy,"mbenrgy[sectormb]/F"); //MBD reported value (could be charge or time)
+      
       _tree->Branch("emcaladc",emcaladc,"emcaladc[sectorem]/I"); //time value of EMCal sector
       _tree->Branch("ihcaladc",ihcaladc,"ihcaladc[sectorih]/I");
       _tree->Branch("ohcaladc",ohcaladc,"ohcaladc[sectoroh]/I");
@@ -381,6 +381,18 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
   
   if(_dataormc) //get collision parameters for MC
     {
+
+      BbcPmtContainer *bbctow = findNode::getClass<BbcPmtContainer>(topNode, "BbcPmtContainer");
+      if(!bbctow)
+	{
+	  if(_debug) cout << "No BBC PMT Container found!" << endl;
+	  return Fun4AllReturnCodes::EVENT_OK;
+	}
+      sectormb = bbctow->get_npmt();
+      for(int i=0; i<sectormb; ++i)
+	{
+	  mbenrgy[i] = bbctow->get_adc(i);
+	}
       PHG4TruthInfoContainer *truthinfo = findNode::getClass<PHG4TruthInfoContainer>(topNode, "G4TruthInfo");
       if (!truthinfo && _debug) std::cout << PHWHERE << "PHG4TruthInfoContainer node is missing, can't collect G4 truth particles"<< std::endl;
       if (!truthinfo) return Fun4AllReturnCodes::EVENT_OK;
