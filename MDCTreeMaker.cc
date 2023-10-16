@@ -194,16 +194,15 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 		track_vtx[0] = vtx->get_x();
 		track_vtx[0] = vtx->get_x();
 		track_vtx[0] = vtx->get_x();
+		if (track_vtx[0] == 0 && track_vtx[1] == 0 && track_vtx[2] == 0) 
+		  { //remove anything with identically zero vertex (errors)
+		    return Fun4AllReturnCodes::EVENT_OK;
+		  }
+		if (fabs(track_vtx[2]) > 50.0) 
+		  { //cut on 50 - may widen in the future
+		    return Fun4AllReturnCodes::EVENT_OK;
+		  }
 	      }
-	    if (track_vtx[0] == 0 && track_vtx[1] == 0 && track_vtx[2] == 0) 
-	      { //remove anything with identically zero vertex (errors)
-		return Fun4AllReturnCodes::EVENT_OK;
-	      }
-	    if (fabs(track_vtx[2]) > 50.0) 
-	      { //cut on 50 - may widen in the future
-		return Fun4AllReturnCodes::EVENT_OK;
-	      }
-
 	    else
 	      {
 		if(_debug) cout << "NO VERTEX FOUND IN GLOBALVERTEXMAP AT ALL! CANCEL EVENT" << endl;
