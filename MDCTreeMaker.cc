@@ -16,8 +16,7 @@
 #include <g4main/PHG4Particle.h>
 #include <bbc/BbcPmtContainer.h>
 #include <fun4all/Fun4AllReturnCodes.h>
-#include <PHHepMCGenEventMap.h>
-#include <PHHepMCGenEvent.h>
+#include <phhepmc/PHHepMCGenEvent.h>
 #include <phool/PHCompositeNode.h>
 #include <phool/PHRandomSeed.h>
 #include <phool/getClass.h>
@@ -123,7 +122,7 @@ int MDCTreeMaker::Init(PHCompositeNode *topNode)
       _tree->Branch("truthparh_e",truthparh_e,"truthparh_e[truthpar_nh]/F");
       _tree->Branch("truthparh_eta",truthparh_eta,"truthparh_eta[truthpar_nh]/F");
       _tree->Branch("truthparh_phi",truthparh_phi,"truthparh_phi[truthpar_nh]/F");
-
+      _tree->Branch("truthparh_id",truthparh_id,"truthparh_id[truthpar_nh]/I");
     }
   return Fun4AllReturnCodes::EVENT_OK;
 }
@@ -408,9 +407,10 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	    /// Get the event characteristics, inherited from HepMC classes
 	    HepMC::GenEvent *truthevent = hepmcevent->getEvent();
 	    if (!truthevent) {
-	      std::cout << PHWHERE
+	      if(_debug) std::cout << PHWHERE
 			<< "no evt pointer under phhepmvgeneventmap found "
 			<< std::endl;
+	      return Fun4AllReturnCodes::EVENT_OK;
 	    }
 
 	    /// Loop over all the truth particles and get their information
@@ -424,7 +424,8 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 		truthparh_pt[truthpar_nh] = sqrt(px*px+py*py);
 		truthparh_pz[truthpar_nh] = pz;
 		truthparh_phi[truthpar_nh]=atan2(py,px);
-		truthparh_eta[truthpar_nh]=atanh(pz/sqrt(px*px+py*py+pz*pz);
+		truthparh_eta[truthpar_nh]=atanh(pz/sqrt(px*px+py*py+pz*pz));
+		truthparh_id[truthpar_nh]=(*iter)->pdg_id();
 		/// Fill the truth tree
 		truthpar_nh++;
 	      }

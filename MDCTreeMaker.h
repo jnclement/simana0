@@ -91,6 +91,7 @@ class MDCTreeMaker : public SubsysReco
   float truthparh_pz[100000];
   float truthparh_eta[100000];
   float truthparh_phi[100000];
+  int truthparh_id[100000];
 };
 
 #endif // MDCTREEMAKER
