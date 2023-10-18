@@ -6,7 +6,6 @@
 #include <gsl/gsl_rng.h>
 #include <string>
 #include <vector>
-#include <calowaveformsim/WaveformContainerv1.h>
 #include "TTree.h"
 #include "TFile.h"
 
