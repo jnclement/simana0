@@ -20,7 +20,8 @@
 #include <phool/PHCompositeNode.h>
 #include <phool/PHRandomSeed.h>
 #include <phool/getClass.h>
-
+#include <bbc/BbcVertexMap.h>
+#include <bbc/BbcVertex.h>
 #include <phhepmc/PHHepMCGenEventMap.h>
 #include <ffaobjects/EventHeaderv1.h>
 #include <g4main/PHG4TruthInfoContainer.h>
@@ -243,8 +244,28 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	    mbd_vtx[2] = vtx->get_z();
 	  } 
       }
-    /*
-    else
+
+    if(_dataormc && 1)
+      {
+	BbcVertexMap* mbdmap = findNode::getClass<BbcVertexMap>(topNode, "BbcVertexMap");
+	if(!mbdmap)
+	  {
+	    if(_debug) cout << "no MBD map!!" << endl;
+	    return Fun4AllReturnCodes::EVENT_OK;
+	  }
+	auto it = mbdmap->begin();
+	BbcVertex* mbdvtx = (*it).second;
+	if(!mbdvtx)
+	  {
+	    if(_debug) cout << "no MBD vtx!!" << endl;
+	    return Fun4AllReturnCodes::EVENT_OK;
+	  }
+	track_vtx[2] = mbdvtx->get_z();
+	track_vtx[0] = 0;
+	track_vtx[1] = 0;
+      }
+	/*
+	  else
       {
 	return Fun4AllReturnCodes::EVENT_OK;
       }
@@ -388,7 +409,6 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
   
   if(_dataormc) //get collision parameters for MC
     {
-      
 
       PHHepMCGenEventMap *hepmceventmap = findNode::getClass<PHHepMCGenEventMap>(topNode, "PHHepMCGenEventMap");
       if (!hepmceventmap)
