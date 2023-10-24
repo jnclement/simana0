@@ -194,6 +194,11 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
     if(j!=vertexmap->end())
       {
 	int vtxnum = 0;
+	if(!j)
+	  {
+	    if(_debug) cout << "something is REALLY wrong..." << endl;
+	    return Fun4AllReturnCodes::EVENT_OK;
+	  }
 	GlobalVertex *vtx = j->second;
 	if(vtx)
 	  {
