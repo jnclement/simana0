@@ -28,13 +28,13 @@ libmdctreemaker_la_SOURCES = \
   MDCTreeMaker.cc
 
 libmdctreemaker_io_la_LIBADD = \
-  -lphool -lSubsysReco -lbbc_io -ljetbase
+  -lphool -lSubsysReco -lmbd_io -ljetbase
 
 libmdctreemaker_la_LIBADD = \
   libmdctreemaker_io.la \
   -lcalo_io \
-  -lSubsysReco -lphg4hit -lffaobjects -lbbc_io \
-  -lcalowaveformsim -ljetbase -lglobalvertex
+  -lSubsysReco -lphg4hit -lffaobjects -lmbd_io \
+  -ljetbase -lglobalvertex
 #-lg4jets_io
 %_Dict.cc: %.h %LinkDef.h
 	rootcint -f $@ @CINTDEFS@ $(DEFAULT_INCLUDES) $(AM_CPPFLAGS) $^
