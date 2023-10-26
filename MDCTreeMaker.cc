@@ -13,19 +13,19 @@
 #include <g4main/PHG4VtxPoint.h>
 #include <g4main/PHG4TruthInfoContainer.h>
 #include <g4main/PHG4Particle.h>
-#include <bbc/BbcPmtContainer.h>
+#include <mbd/MbdPmtContainer.h>
 #include <fun4all/Fun4AllReturnCodes.h>
 #include <phhepmc/PHHepMCGenEvent.h>
 #include <phool/PHCompositeNode.h>
 #include <phool/PHRandomSeed.h>
 #include <phool/getClass.h>
-#include <bbc/BbcVertexMap.h>
-#include <bbc/BbcVertex.h>
+#include <mbd/MbdVertexMap.h>
+#include <mbd/MbdVertex.h>
 #include <phhepmc/PHHepMCGenEventMap.h>
 #include <ffaobjects/EventHeaderv1.h>
 #include <g4main/PHG4TruthInfoContainer.h>
 #include <HepMC/GenEvent.h>
-
+#include <mbd/MbdPmtHit.h>
 #include <jetbackground/TowerBackgroundv1.h>
 #include <cmath>
 
@@ -260,7 +260,7 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 
     if(_dataormc && 1)
       {
-	BbcVertexMap* mbdmap = findNode::getClass<BbcVertexMap>(topNode, "BbcVertexMap");
+	MbdVertexMap* mbdmap = findNode::getClass<MbdVertexMap>(topNode, "MbdVertexMap");
 	if(_debug) cout << "mbdmap: " << mbdmap << endl;
 	if(!mbdmap)
 	  {
@@ -274,19 +274,19 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	    return Fun4AllReturnCodes::EVENT_OK;
 	  }
 	if(_debug) cout << "Made iterator for mbdmap" << endl;
-	BbcVertex* mbdvtx = (*it).second;
+	MbdVertex* mbdvtx = (*it).second;
 	if(_debug) cout << "Got iterator.second from mbdmap" << endl;
 	if(!mbdvtx)
 	  {
-	    if(_debug) cout << "no MBD vtx from BBCreco module!!" << endl;
+	    if(_debug) cout << "no MBD vtx from MBDreco module!!" << endl;
 	    return Fun4AllReturnCodes::EVENT_OK;
 	  }
-	if(_debug) cout << "about to get mbdvtx z value for bbcreco module with vertex pointer: " << mbdvtx << " type: " << typeid(mbdvtx).name() << endl;
+	if(_debug) cout << "about to get mbdvtx z value for mbdreco module with vertex pointer: " << mbdvtx << " type: " << typeid(mbdvtx).name() << endl;
 	track_vtx[2] = mbdvtx->get_z();
-	if(_debug) cout << "got mbdvtx z value for bbcreco module" << endl;
+	if(_debug) cout << "got mbdvtx z value for mbdreco module" << endl;
 	if(track_vtx[2] == 0 || track_vtx[2] > 50)
 	  {
-	    if(_debug) cout << "Zero or very large MBD vtx in BBCreco module - skipping event." << endl;
+	    if(_debug) cout << "Zero or very large MBD vtx in MBDreco module - skipping event." << endl;
 	    return Fun4AllReturnCodes::EVENT_OK;
 	  }
 	track_vtx[0] = 0;
@@ -483,16 +483,17 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
       }
 
 
-      BbcPmtContainer *bbctow = findNode::getClass<BbcPmtContainer>(topNode, "BbcPmtContainer");
-      if(!bbctow)
+      MbdPmtContainer *mbdtow = findNode::getClass<MbdPmtContainer>(topNode, "MbdPmtContainer");
+      if(!mbdtow)
 	{
-	  if(_debug) cout << "No BBC PMT Container found!" << endl;
+	  if(_debug) cout << "No MBD PMT Container found!" << endl;
 	  return Fun4AllReturnCodes::EVENT_OK;
 	}
-      sectormb = bbctow->get_npmt();
+      sectormb = mbdtow->get_npmt();
       for(int i=0; i<sectormb; ++i)
 	{
-	  mbenrgy[i] = bbctow->get_adc(i);
+	  MbdPmtHit *mbdhit = mbdtow->get_pmt(i);
+	  mbenrgy[i] = mbdhit->get_q();
 	}
       PHG4TruthInfoContainer *truthinfo = findNode::getClass<PHG4TruthInfoContainer>(topNode, "G4TruthInfo");
       if (!truthinfo && _debug) std::cout << PHWHERE << "PHG4TruthInfoContainer node is missing, can't collect G4 truth particles"<< std::endl;
