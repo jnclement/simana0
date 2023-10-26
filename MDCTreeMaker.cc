@@ -176,22 +176,23 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
     TowerInfoContainerv1 *towersMB = findNode::getClass<TowerInfoContainerv1>(topNode, "TOWERS_MBD");
     
     GlobalVertexMap *vertexmap = findNode::getClass<GlobalVertexMap>(topNode,"GlobalVertexMap");
+    GlobalVertexMap* danvtx = findNode::getClass<GlobalVertexMap>(topNode,"DansSpecialVertexMap");
     if(_debug) cout << "Checking that all necessary objects exist" << endl;
     if(!towersEM || !towersIH || !towersOH || !geomEM || !geomIH || !geomOH || !vertexmap)
       {
 	cout << "em/ih/oh/gem/gih/goh/vtx: " << towersEM << " " << towersIH << " " << towersOH << " " << geomEM << " " << geomIH << " " << geomOH << " " << vertexmap << endl;
 	return Fun4AllReturnCodes::EVENT_OK; //remove events which do not have all required information
       }
-    if(!_dataormc && (!towersIHuc || !towersEMuc || !towersOHuc || !towersMB))
+    if(!_dataormc && (!towersIHuc || !towersEMuc || !towersOHuc || !towersMB || !danvtx))
       {
-	cout << "uce/uci/uco/mb: " << " " << towersEMuc << " " << towersIHuc << " " << towersOHuc << " " << towersMB << endl;
+	cout << "uce/uci/uco/mb/dvtx: " << " " << towersEMuc << " " << towersIHuc << " " << towersOHuc << " " << towersMB << " " << danvtx << endl;
 	return Fun4AllReturnCodes::EVENT_OK;
       }
     if(_debug) cout << "EM geomtry node: " << geomEM << endl;
     if(_debug) cout << "Getting vertex" << endl;
     int mapnum = 0;
-    auto j=vertexmap->begin();
-    if(j!=vertexmap->end())
+    auto j=(_dataormc?vertexmap:danvtx)->begin();
+    if(j!=(_dataormc?vertexmap:danvtx)->end())
       {
 	int vtxnum = 0;
 	/*
