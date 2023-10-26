@@ -194,12 +194,16 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
     if(j!=vertexmap->end())
       {
 	int vtxnum = 0;
+	/*
 	if(!j)
 	  {
 	    if(_debug) cout << "something is REALLY wrong..." << endl;
 	    return Fun4AllReturnCodes::EVENT_OK;
 	  }
+	*/
+	if(_debug) cout << "j iterator exists for vertexmap" << endl;
 	GlobalVertex *vtx = j->second;
+	if(_debug) cout << "Got j iterator.second for vertexmap" << endl;
 	if(vtx)
 	  {
 	    track_vtx[0] = vtx->get_x();
@@ -229,6 +233,11 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	  }
 	mapnum++;
       }
+    else
+      {
+	if(_debug) cout << "no vertexmap, skipping event" << endl;
+	return Fun4AllReturnCodes::EVENT_OK;
+      }
     
     auto iter = vertexmap->begin(); //z vertex getting
     if(iter != vertexmap->end()) 
@@ -252,19 +261,34 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
     if(_dataormc && 1)
       {
 	BbcVertexMap* mbdmap = findNode::getClass<BbcVertexMap>(topNode, "BbcVertexMap");
+	if(_debug) cout << "mbdmap: " << mbdmap << endl;
 	if(!mbdmap)
 	  {
 	    if(_debug) cout << "no MBD map!!" << endl;
 	    return Fun4AllReturnCodes::EVENT_OK;
 	  }
 	auto it = mbdmap->begin();
-	BbcVertex* mbdvtx = (*it).second;
-	if(!mbdvtx)
+	if(it == mbdmap->end())
 	  {
-	    if(_debug) cout << "no MBD vtx!!" << endl;
+	    if(_debug) cout << "Empty mbdmap!" << endl;
 	    return Fun4AllReturnCodes::EVENT_OK;
 	  }
+	if(_debug) cout << "Made iterator for mbdmap" << endl;
+	BbcVertex* mbdvtx = (*it).second;
+	if(_debug) cout << "Got iterator.second from mbdmap" << endl;
+	if(!mbdvtx)
+	  {
+	    if(_debug) cout << "no MBD vtx from BBCreco module!!" << endl;
+	    return Fun4AllReturnCodes::EVENT_OK;
+	  }
+	if(_debug) cout << "about to get mbdvtx z value for bbcreco module with vertex pointer: " << mbdvtx << " type: " << typeid(mbdvtx).name() << endl;
 	track_vtx[2] = mbdvtx->get_z();
+	if(_debug) cout << "got mbdvtx z value for bbcreco module" << endl;
+	if(track_vtx[2] == 0 || track_vtx[2] > 50)
+	  {
+	    if(_debug) cout << "Zero or very large MBD vtx in BBCreco module - skipping event." << endl;
+	    return Fun4AllReturnCodes::EVENT_OK;
+	  }
 	track_vtx[0] = 0;
 	track_vtx[1] = 0;
       }
