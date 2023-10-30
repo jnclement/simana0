@@ -259,7 +259,7 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	  } 
       }
 
-    if(_dataormc && 1)
+    if(_dataormc && 0)
       {
 	MbdVertexMap* mbdmap = findNode::getClass<MbdVertexMap>(topNode, "MbdVertexMap");
 	if(_debug) cout << "mbdmap: " << mbdmap << endl;
@@ -490,10 +490,12 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	  if(_debug) cout << "No MBD PMT Container found!" << endl;
 	  return Fun4AllReturnCodes::EVENT_OK;
 	}
-      sectormb = mbdtow->get_npmt();
+      sectormb = 128;//mbdtow->get_npmt();
+      //if(_debug) cout << "Got " << sectormb << " mbd sectors in sim." << endl;
       for(int i=0; i<sectormb; ++i)
 	{
 	  MbdPmtHit *mbdhit = mbdtow->get_pmt(i);
+	  //if(_debug) cout << "PMT " << i << " address: " << mbdhit << " charge: " << mbdhit->get_q() << endl;
 	  mbenrgy[i] = mbdhit->get_q();
 	}
       PHG4TruthInfoContainer *truthinfo = findNode::getClass<PHG4TruthInfoContainer>(topNode, "G4TruthInfo");
