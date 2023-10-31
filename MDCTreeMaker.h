@@ -14,7 +14,7 @@ class MDCTreeMaker : public SubsysReco
 {
  public:
 
-  MDCTreeMaker(const std::string &name = "MDCTreeMaker", const int dataormc = 0, const int debug = 1, const int correct = 1);
+  MDCTreeMaker(const std::string &name = "MDCTreeMaker", const int dataormc = 0, const int debug = 0, const int correct = 1);
 
   virtual ~MDCTreeMaker();
 
@@ -36,6 +36,7 @@ class MDCTreeMaker : public SubsysReco
 
 
  private:
+  int _evtct;
   int _correct;
   int _debug;
   int _dataormc;

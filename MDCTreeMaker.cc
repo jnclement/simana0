@@ -46,6 +46,7 @@ using namespace std;
 MDCTreeMaker::MDCTreeMaker(const std::string &name, const int dataormc, const int debug, const int correct):
   SubsysReco((name+"test").c_str())
 {
+  _evtct = 0;
   _correct = correct;
   _foutname = name;  
   _dataormc = dataormc;
@@ -135,7 +136,11 @@ int MDCTreeMaker::InitRun(PHCompositeNode *topNode)
 //____________________________________________________________________________..
 int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 {
+  _evtct++;
   if(_debug) cout << "Beginning event processing" << endl;
+  if(_debug) cout << "Event " << _evtct << endl;
+  float truthpar_sume = 0;
+  float mbdq = 0;
   //reset lengths to all zero
   sectorem = 0;
   sectorih = 0;
@@ -259,7 +264,7 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	  } 
       }
 
-    if(_dataormc && 0)
+    if(_dataormc && 1)
       {
 	MbdVertexMap* mbdmap = findNode::getClass<MbdVertexMap>(topNode, "MbdVertexMap");
 	if(_debug) cout << "mbdmap: " << mbdmap << endl;
@@ -328,8 +333,8 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	    emcalpos[sectorem][1] = tower_geom->get_center_y();
 	    emcalpos[sectorem][2] = tower_geom->get_center_z();
 	    double newz = emcalpos[sectorem][2] - track_vtx[2];
-	    double newx = emcalpos[sectorem][0] - track_vtx[1];
-	    double newy = emcalpos[sectorem][1] - track_vtx[0];
+	    double newx = emcalpos[sectorem][0] - track_vtx[0];
+	    double newy = emcalpos[sectorem][1] - track_vtx[1];
 	    double oldx = tower_geom->get_center_x();
 	    double oldy = tower_geom->get_center_y();
 	    double oldz = tower_geom->get_center_z();
@@ -363,8 +368,8 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	    ohcalpos[sectoroh][1] = tower_geom->get_center_y();
 	    ohcalpos[sectoroh][2] = tower_geom->get_center_z();
 	    double newz = ohcalpos[sectoroh][2] - track_vtx[2];
-	    double newx = ohcalpos[sectoroh][0] - track_vtx[1];
-	    double newy = ohcalpos[sectoroh][1] - track_vtx[0];
+	    double newx = ohcalpos[sectoroh][0] - track_vtx[0];
+	    double newy = ohcalpos[sectoroh][1] - track_vtx[1];
 	    double oldx = tower_geom->get_center_x();
 	    double oldy = tower_geom->get_center_y();
 	    double oldz = tower_geom->get_center_z();
@@ -398,8 +403,8 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	    ihcalpos[sectorih][1] = tower_geom->get_center_y();
 	    ihcalpos[sectorih][2] = tower_geom->get_center_z();
 	    double newz = ihcalpos[sectorih][2] - track_vtx[2];
-	    double newx = ihcalpos[sectorih][0] - track_vtx[1];
-	    double newy = ihcalpos[sectorih][1] - track_vtx[0];
+	    double newx = ihcalpos[sectorih][0] - track_vtx[0];
+	    double newy = ihcalpos[sectorih][1] - track_vtx[1];
 	    double oldx = tower_geom->get_center_x();
 	    double oldy = tower_geom->get_center_y();
 	    double oldz = tower_geom->get_center_z();
@@ -497,6 +502,7 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	  MbdPmtHit *mbdhit = mbdtow->get_pmt(i);
 	  //if(_debug) cout << "PMT " << i << " address: " << mbdhit << " charge: " << mbdhit->get_q() << endl;
 	  mbenrgy[i] = mbdhit->get_q();
+	  mbdq += mbdhit->get_q();
 	}
       PHG4TruthInfoContainer *truthinfo = findNode::getClass<PHG4TruthInfoContainer>(topNode, "G4TruthInfo");
       if (!truthinfo && _debug) std::cout << PHWHERE << "PHG4TruthInfoContainer node is missing, can't collect G4 truth particles"<< std::endl;
@@ -515,6 +521,7 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 					 + truth->get_py() * truth->get_py());
 	  truthpar_pz[truthpar_n] = truth->get_pz();
 	  truthpar_e[truthpar_n] = truth->get_e();
+	  truthpar_sume += truth->get_e();
 	  truthpar_phi[truthpar_n] = atan2(truth->get_py(), truth->get_px());
 	  truthpar_eta[truthpar_n] = atanh(truth->get_pz() / sqrt(truth->get_px()*truth->get_px()+truth->get_py()*truth->get_py()+truth->get_pz()*truth->get_pz()));
 	  if (truthpar_eta[truthpar_n] != truthpar_eta[truthpar_n]) truthpar_eta[truthpar_n] = -999; // check for nans
@@ -562,9 +569,14 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
   
   if(_debug) cout << "Filling" << endl;
 
-  if(_debug) cout << sectorem << endl;
-
   _tree->Fill();
+
+  if(_debug)
+    {
+      cout << "Total truth E |eta|<1: " << truthpar_sume << endl;
+      cout << "Total mbd q: " << mbdq << endl;
+      cout << "npart: " << npart << endl;
+    }
   
   return Fun4AllReturnCodes::EVENT_OK;
   
