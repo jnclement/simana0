@@ -2,7 +2,6 @@
 #define MDCTREEMAKER_H
 
 #include <fun4all/SubsysReco.h>
-
 #include <gsl/gsl_rng.h>
 #include <string>
 #include <vector>
@@ -92,6 +91,12 @@ class MDCTreeMaker : public SubsysReco
   float truthparh_eta[100000];
   float truthparh_phi[100000];
   int truthparh_id[100000];
+  std::vector<int> baryons{2212,2112,2224,2214,2114,1114,3122,3222,3212,3112,
+      3224,3214,3114,3322,3312,3324,3314,3334,4122,4222,4212,4112,4224,4214,
+      4114,4232,4312,4324,4314,4332,4334,4412,4422,4414,4424,4432,4434,4444,
+      5122,5112,5212,5222,5114,5214,5224,5132,5232,5312,5322,5314,5324,5332,
+      5334,5142,5242,5412,5422,5414,5424,5342,5432,5434,5442,5444,5512,5522,
+      5514,5524,5532,5534,5542,5544,5554};
 };
 
 #endif // MDCTREEMAKER

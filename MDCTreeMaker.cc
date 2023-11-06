@@ -19,8 +19,8 @@
 #include <phool/PHCompositeNode.h>
 #include <phool/PHRandomSeed.h>
 #include <phool/getClass.h>
-#include <mbd/MbdVertexMap.h>
-#include <mbd/MbdVertex.h>
+#include <globalvertex/MbdVertexMap.h>
+#include <globalvertex/MbdVertex.h>
 #include <phhepmc/PHHepMCGenEventMap.h>
 #include <ffaobjects/EventHeaderv1.h>
 #include <g4main/PHG4TruthInfoContainer.h>
@@ -249,7 +249,7 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
     if(iter != vertexmap->end()) 
       {
 	//GlobalVertex *vtx = iter->second;
-	GlobalVertex *vtx = vertexmap->get(GlobalVertex::BBC);
+	GlobalVertex *vtx = vertexmap->get(GlobalVertex::MBD);
 	if(!vtx)
 	  {
 	    if(_debug) cout << "no MBD VTX!" << endl;
@@ -511,7 +511,7 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
       truthpar_n = 0;
       for (PHG4TruthInfoContainer::ConstIterator iter = range.first; iter != range.second; ++iter)
 	{
-	  
+	  float pmass = 0.938272;
 	  // Get truth particle
 	  const PHG4Particle *truth = iter->second;
 	  if (!truthinfo->is_primary(truth)) continue;
@@ -520,7 +520,20 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	  truthpar_pt[truthpar_n] = sqrt(truth->get_px() * truth->get_px()
 					 + truth->get_py() * truth->get_py());
 	  truthpar_pz[truthpar_n] = truth->get_pz();
-	  truthpar_e[truthpar_n] = truth->get_e();
+	  std::vector<int>::iterator parit = find(baryons.begin(), baryons.end(), truth->get_pid());
+	  std::vector<int>::iterator apart = find(baryons.begin(), baryons.end(), -truth->get_pid());
+	  if(parit != baryons.end())
+	    {
+	      truthpar_e[truthpar_n] = truth->get_e() - pmass;
+	    }
+	  else if(apart != baryons.end())
+	    {
+	      truthpar_e[truthpar_n] = truth->get_e() + 2*pmass;
+	    }
+	  else
+	    {
+	      truthpar_e[truthpar_n] = truth->get_e();
+	    }
 	  truthpar_sume += truth->get_e();
 	  truthpar_phi[truthpar_n] = atan2(truth->get_py(), truth->get_px());
 	  truthpar_eta[truthpar_n] = atanh(truth->get_pz() / sqrt(truth->get_px()*truth->get_px()+truth->get_py()*truth->get_py()+truth->get_pz()*truth->get_pz()));
