@@ -196,8 +196,10 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
     if(_debug) cout << "EM geomtry node: " << geomEM << endl;
     if(_debug) cout << "Getting vertex" << endl;
     int mapnum = 0;
-    auto j=(_dataormc?vertexmap:danvtx)->begin();
-    if(j!=(_dataormc?vertexmap:danvtx)->end())
+    //auto j=(_dataormc?vertexmap:danvtx)->begin();
+    auto j = vertexmap->begin();
+    //if(j!=(_dataormc?vertexmap:danvtx)->end())
+    if(j!=vertexmap->end())
       {
 	int vtxnum = 0;
 	/*
@@ -528,7 +530,7 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	    }
 	  else if(apart != baryons.end())
 	    {
-	      truthpar_e[truthpar_n] = truth->get_e() + 2*pmass;
+	      truthpar_e[truthpar_n] = truth->get_e() + pmass;
 	    }
 	  else
 	    {
