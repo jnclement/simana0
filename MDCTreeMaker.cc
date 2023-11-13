@@ -181,20 +181,21 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
     TowerInfoContainerv1 *towersMB = findNode::getClass<TowerInfoContainerv1>(topNode, "TOWERS_MBD");
     
     GlobalVertexMap *vertexmap = findNode::getClass<GlobalVertexMap>(topNode,"GlobalVertexMap");
-    GlobalVertexMap* danvtx = findNode::getClass<GlobalVertexMap>(topNode,"DansSpecialVertexMap");
+    //GlobalVertexMap* danvtx = findNode::getClass<GlobalVertexMap>(topNode,"DansSpecialVertexMap");
     if(_debug) cout << "Checking that all necessary objects exist" << endl;
     if(!towersEM || !towersIH || !towersOH || !geomEM || !geomIH || !geomOH || !vertexmap)
       {
 	cout << "em/ih/oh/gem/gih/goh/vtx: " << towersEM << " " << towersIH << " " << towersOH << " " << geomEM << " " << geomIH << " " << geomOH << " " << vertexmap << endl;
 	return Fun4AllReturnCodes::EVENT_OK; //remove events which do not have all required information
       }
-    if(!_dataormc && (!towersIHuc || !towersEMuc || !towersOHuc || !towersMB || !danvtx))
+    if(!_dataormc && (!towersIHuc || !towersEMuc || !towersOHuc || !towersMB))// || !danvtx))
       {
-	cout << "uce/uci/uco/mb/dvtx: " << " " << towersEMuc << " " << towersIHuc << " " << towersOHuc << " " << towersMB << " " << danvtx << endl;
+	cout << "uce/uci/uco/mb/dvtx: " << " " << towersEMuc << " " << towersIHuc << " " << towersOHuc << " " << towersMB << endl;//" " << danvtx << endl;
 	return Fun4AllReturnCodes::EVENT_OK;
       }
     if(_debug) cout << "EM geomtry node: " << geomEM << endl;
     if(_debug) cout << "Getting vertex" << endl;
+    /*
     int mapnum = 0;
     //auto j=(_dataormc?vertexmap:danvtx)->begin();
     auto j = vertexmap->begin();
@@ -202,13 +203,6 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
     if(j!=vertexmap->end())
       {
 	int vtxnum = 0;
-	/*
-	if(!j)
-	  {
-	    if(_debug) cout << "something is REALLY wrong..." << endl;
-	    return Fun4AllReturnCodes::EVENT_OK;
-	  }
-	*/
 	if(_debug) cout << "j iterator exists for vertexmap" << endl;
 	GlobalVertex *vtx = j->second;
 	if(_debug) cout << "Got j iterator.second for vertexmap" << endl;
@@ -246,7 +240,8 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	if(_debug) cout << "no vertexmap, skipping event" << endl;
 	return Fun4AllReturnCodes::EVENT_OK;
       }
-    
+    */
+    /*
     auto iter = vertexmap->begin(); //z vertex getting
     if(iter != vertexmap->end()) 
       {
@@ -265,12 +260,12 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	    mbd_vtx[2] = vtx->get_z();
 	  } 
       }
-
-    if(_dataormc && 1)
+    */
+    //if(_dataormc && 1)
       {
 	MbdVertexMap* mbdmap = findNode::getClass<MbdVertexMap>(topNode, "MbdVertexMap");
 	if(_debug) cout << "mbdmap: " << mbdmap << endl;
-	if(!mbdmap)
+	if(!mbdmap || mbdmap->empty())
 	  {
 	    if(_debug) cout << "no MBD map!!" << endl;
 	    return Fun4AllReturnCodes::EVENT_OK;
@@ -522,15 +517,16 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	  truthpar_pt[truthpar_n] = sqrt(truth->get_px() * truth->get_px()
 					 + truth->get_py() * truth->get_py());
 	  truthpar_pz[truthpar_n] = truth->get_pz();
+	  float psquare = truthpar_pt[truthpar_n]*truthpar_pt[truthpar_n]+truthpar_pz[truthpar_n]*truthpar_pz[truthpar_n];
 	  std::vector<int>::iterator parit = find(baryons.begin(), baryons.end(), truth->get_pid());
 	  std::vector<int>::iterator apart = find(baryons.begin(), baryons.end(), -truth->get_pid());
 	  if(parit != baryons.end())
 	    {
-	      truthpar_e[truthpar_n] = truth->get_e() - pmass;
+	      truthpar_e[truthpar_n] = truth->get_e() - sqrt(truth->get_e()*truth->get_e()-psquare);
 	    }
 	  else if(apart != baryons.end())
 	    {
-	      truthpar_e[truthpar_n] = truth->get_e() + pmass;
+	      truthpar_e[truthpar_n] = truth->get_e() - sqrt(truth->get_e()*truth->get_e()-psquare) + 2*pmass;
 	    }
 	  else
 	    {
