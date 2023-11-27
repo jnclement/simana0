@@ -82,7 +82,7 @@ int MDCTreeMaker::Init(PHCompositeNode *topNode)
   _tree->Branch("ohcaletabin",ohcaletabin,"ohcaletabin[sectoroh]/I");
   _tree->Branch("emcalphibin",emcalphibin,"emcalphibin[sectorem]/I"); //phi of EMCal sector
   _tree->Branch("ihcalphibin",ihcalphibin,"ihcalphibin[sectorih]/I");
-  _tree->Branch("ohcalphibin",ohcalphibin,"ihcalphibin[sectoroh]/I");
+  _tree->Branch("ohcalphibin",ohcalphibin,"ohcalphibin[sectoroh]/I");
   _tree->Branch("sectormb",&sectormb,"sectormb/I");
   _tree->Branch("mbenrgy",mbenrgy,"mbenrgy[sectormb]/F"); //MBD reported value (could be charge or time)
 
@@ -98,6 +98,9 @@ int MDCTreeMaker::Init(PHCompositeNode *topNode)
       _tree->Branch("mbdtype",mbdtype,"mbdtype[sectormb]/I"); //MBD type (charge or time)
       _tree->Branch("mbdside",mbdside,"mbdside[sectormb]/I"); //MBD side (N/S)
       _tree->Branch("mbdchan",mbdchan,"mbdchan[sectormb]/I"); //MBD channel number (0-63 on each side)
+      _tree->Branch("emchi2",emchi2,"emchi2[sectorem]/F");
+      _tree->Branch("ihchi2",ihchi2,"ihchi2[sectorih]/F");
+      _tree->Branch("ohchi2",ohchi2,"ohchi2[sectoroh]/F");
     }
   _tree->Branch("ihcalpos",ihcalpos,"ihcalpos[sectorih][3]/F"); //position (xyz) of EMCal sector center
   _tree->Branch("emcalpos",emcalpos,"emcalpos[sectorem][3]/F");
@@ -324,16 +327,36 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	for(int i=0; i<nchannels; ++i) //loop over channels
 	  {
 	    TowerInfo *tower = towersEM->get_tower_at_channel(i); //get EMCal tower
+	    /*
+	    if(_debug)
+	      {
+		TowerInfo* rawtower = towersEMuc->get_tower_at_channel(i);
+		int rawkey = towersEMuc->encode_key(i);
+		int raweta = towersEMuc->getTowerEtaBin(rawkey);
+		int realeta = towersEM->getTowerEtaBin(towersEM->encode_key(i));
+		if(raweta == 95 || raweta == 8)
+		  {
+		    cout << "raw/calib eta and raw/calib E: " << raweta << " " << realeta << " " << rawtower->get_energy() << " " << tower->get_energy() << endl;
+		  }
+	      }
+	    */
+	    if(!_dataormc)
+	      {
+		if(tower->get_chi2() > 9000*tower->get_energy()+43000) continue;
+	      }
 	    //if(_debug) cout << "Tower " << i << ": " << tower << endl;
  	    int key = towersEM->encode_key(i);
 	    int time = towersEM->get_tower_at_channel(i)->get_time(); //get time
-	    if(towersEMuc->get_tower_at_channel(i)->get_energy() == 0)
+	    if(!_dataormc)
 	      {
-		if(debug > 1)
+		if(towersEMuc->get_tower_at_channel(i)->get_energy() == 0)
 		  {
-		    cout << "EMCal ADC 0 in tower " << i << endl;
+		    if(_debug > 1)
+		      {
+			cout << "EMCal ADC 0 in tower " << i << endl;
+		      }
+		    continue;
 		  }
-		continue;
 	      }
 	    if(!_dataormc && (time > 1 || time < -1))
 	      {
@@ -346,13 +369,13 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	    if(tower->get_energy() < -0.1 && _debug) cout << "negative energy found!: i/E "<< i << " " << tower->get_energy() << endl;
 	    //if(tower->get_energy() < -0.3 && _debug) continue;
 	    emcalen[sectorem] = tower->get_energy(); //actual tower energy (calibrated)
+	    emchi2[sectorem] = tower->get_chi2();
 	    EMCalEtot += emcalen[sectorem];
 	    const RawTowerDefs::keytype geomkey = RawTowerDefs::encode_towerid(RawTowerDefs::CalorimeterId::CEMC, etabin, phibin);
 	    RawTowerGeom *tower_geom = geomEM->get_tower_geometry(geomkey); //encode tower geometry
 	    //if(_debug) cout << "Tower geom: " << tower_geom << endl;
 	    emcalt[sectorem] = time; //store time value
 	    if(!_dataormc) emcaladc[sectorem] = towersEMuc->get_tower_at_channel(i)->get_energy(); //emcal ADC value (uncalibrated "energy")
-	    
 	    emcalpos[sectorem][0] = tower_geom->get_center_x(); //get positions of towers
 	    emcalpos[sectorem][1] = tower_geom->get_center_y();
 	    emcalpos[sectorem][2] = tower_geom->get_center_z();
@@ -380,20 +403,25 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	for(int i=0; i<nchannels; ++i)
 	  {
 	    TowerInfo *tower = towersOH->get_tower_at_channel(i);
-	    int time = towersOH->get_tower_at_channel(i)->get_time();
-	    if(towersEMuc->get_tower_at_channel(i)->get_energy() == 0)
+	    if(!_dataormc)
 	      {
-		if(debug > 1)
+		if(tower->get_chi2() > 300*tower->get_energy()+250) continue;
+	      }
+	    int time = towersOH->get_tower_at_channel(i)->get_time();
+	    if(!_dataormc){if(towersOHuc->get_tower_at_channel(i)->get_energy() == 0)
+	      {
+		if(_debug > 1)
                   {
                     cout << "OHCal ADC 0 in tower " << i << endl;
                   }
 		continue;
-	      }
+	      }}
 	    if(!_dataormc && (time > 2 || time < -1)) continue;
 	    int key = towersOH->encode_key(i);
 	    int etabin = towersOH->getTowerEtaBin(key);
 	    int phibin = towersOH->getTowerPhiBin(key);
 	    ohcalen[sectoroh] = tower->get_energy();
+	    ohchi2[sectoroh] = tower->get_chi2();
 	    const RawTowerDefs::keytype geomkey = RawTowerDefs::encode_towerid(RawTowerDefs::CalorimeterId::HCALOUT, etabin, phibin);
 	    RawTowerGeom *tower_geom = geomOH->get_tower_geometry(geomkey);
 	    ohcalt[sectoroh] = time;
@@ -422,20 +450,25 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	for(int i=0; i<nchannels; ++i)
 	  {
 	    TowerInfo *tower = towersIH->get_tower_at_channel(i);
-	    int time = towersIH->get_tower_at_channel(i)->get_time();
-	    if(towersEMuc->get_tower_at_channel(i)->get_energy() == 0)
+	    if(!_dataormc)
 	      {
-		if(debug > 1)
+		if(tower->get_chi2() > 3000) continue;
+	      }
+	    int time = towersIH->get_tower_at_channel(i)->get_time();
+	    if(!_dataormc){if(towersIHuc->get_tower_at_channel(i)->get_energy() == 0)
+	      {
+		if(_debug > 1)
                   {
                     cout << "IHCal ADC 0 in tower " << i << endl;
                   }
 		continue;
-	      }
+	      }}
 	    if(!_dataormc && (time > 1 || time < -1)) continue;
 	    int key = towersIH->encode_key(i);
 	    int etabin = towersIH->getTowerEtaBin(key);
 	    int phibin = towersIH->getTowerPhiBin(key);
 	    ihcalen[sectorih] = tower->get_energy();
+	    ihchi2[sectorih] = tower->get_chi2();
 	    const RawTowerDefs::keytype geomkey = RawTowerDefs::encode_towerid(RawTowerDefs::CalorimeterId::HCALIN, etabin, phibin);
 	    RawTowerGeom *tower_geom = geomIH->get_tower_geometry(geomkey);
 	    ihcalt[sectorih] = time;

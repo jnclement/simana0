@@ -78,6 +78,9 @@ class MDCTreeMaker : public SubsysReco
   float emetacor[24576];
   float ihetacor[1536];
   float ohetacor[1536];
+  float emchi2[24576];
+  float ihchi2[1536];
+  float ohchi2[1536];
   int truthpar_n;
   int truthpar_nh;
   float truthpar_pz[100000];
