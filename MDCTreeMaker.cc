@@ -88,10 +88,14 @@ int MDCTreeMaker::Init(PHCompositeNode *topNode)
 
   if(!_dataormc)
     {
-      _tree->Branch("emcalt",emcalt,"emcalt[sectorem]/I"); //time value of EMCal sector
-      _tree->Branch("ihcalt",ihcalt,"ihcalt[sectorih]/I");
-      _tree->Branch("ohcalt",ohcalt,"ohcalt[sectoroh]/I");
+      _tree->Branch("emcalt",emcalt,"emcalt[sectorem]/F"); //time value of EMCal sector
+      _tree->Branch("ihcalt",ihcalt,"ihcalt[sectorih]/F");
+      _tree->Branch("ohcalt",ohcalt,"ohcalt[sectoroh]/F");
       
+      _tree->Branch("emhot",emhot,"emhot[sectorem]/I"); //time value of EMCal sector
+      _tree->Branch("ihhot",ihhot,"ihhot[sectorih]/I");
+      _tree->Branch("ohhot",ohhot,"ohhot[sectoroh]/I");
+
       _tree->Branch("emcaladc",emcaladc,"emcaladc[sectorem]/I"); //time value of EMCal sector
       _tree->Branch("ihcaladc",ihcaladc,"ihcaladc[sectorih]/I");
       _tree->Branch("ohcaladc",ohcaladc,"ohcaladc[sectoroh]/I");
@@ -346,7 +350,7 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	      }
 	    //if(_debug) cout << "Tower " << i << ": " << tower << endl;
  	    int key = towersEM->encode_key(i);
-	    int time = towersEM->get_tower_at_channel(i)->get_time(); //get time
+	    float time = towersEM->get_tower_at_channel(i)->get_time_float(); //get time
 	    if(!_dataormc)
 	      {
 		if(towersEMuc->get_tower_at_channel(i)->get_energy() == 0)
@@ -358,11 +362,12 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 		    continue;
 		  }
 	      }
-	    if(!_dataormc && (time > 1 || time < -1))
+	    if(!_dataormc && (time > 1.4 || time < -0.6))
 	      {
 		if(_debug > 2) cout << time << endl;
 		continue; //timing cut
 	      }
+	    emhot[sectorem] = tower->get_isHot();
 	    if(_debug > 2) cout << "i/time: " << i << " " << time << endl;
 	    int etabin = towersEM->getTowerEtaBin(key); //get eta and phi indices
 	    int phibin = towersEM->getTowerPhiBin(key);
@@ -407,7 +412,7 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	      {
 		if(tower->get_chi2() > 300*tower->get_energy()+250) continue;
 	      }
-	    int time = towersOH->get_tower_at_channel(i)->get_time();
+	    float time = towersOH->get_tower_at_channel(i)->get_time_float();
 	    if(!_dataormc){if(towersOHuc->get_tower_at_channel(i)->get_energy() == 0)
 	      {
 		if(_debug > 1)
@@ -416,7 +421,8 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
                   }
 		continue;
 	      }}
-	    if(!_dataormc && (time > 2 || time < -1)) continue;
+	    if(!_dataormc && (time > 2 || time < -2)) continue;
+	    ohhot[sectoroh] = tower->get_isHot();
 	    int key = towersOH->encode_key(i);
 	    int etabin = towersOH->getTowerEtaBin(key);
 	    int phibin = towersOH->getTowerPhiBin(key);
@@ -454,7 +460,7 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	      {
 		if(tower->get_chi2() > 3000) continue;
 	      }
-	    int time = towersIH->get_tower_at_channel(i)->get_time();
+	    float time = towersIH->get_tower_at_channel(i)->get_time_float();
 	    if(!_dataormc){if(towersIHuc->get_tower_at_channel(i)->get_energy() == 0)
 	      {
 		if(_debug > 1)
@@ -464,6 +470,7 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 		continue;
 	      }}
 	    if(!_dataormc && (time > 1 || time < -1)) continue;
+	    ihhot[sectorih] = tower->get_isHot();
 	    int key = towersIH->encode_key(i);
 	    int etabin = towersIH->getTowerEtaBin(key);
 	    int phibin = towersIH->getTowerPhiBin(key);
