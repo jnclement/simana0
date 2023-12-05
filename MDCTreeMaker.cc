@@ -344,10 +344,12 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 		  }
 	      }
 	    */
+	    /*
 	    if(!_dataormc)
 	      {
 		if(tower->get_chi2() > 9000*tower->get_energy()+43000) continue;
 	      }
+	    */
 	    //if(_debug) cout << "Tower " << i << ": " << tower << endl;
  	    int key = towersEM->encode_key(i);
 	    float time = towersEM->get_tower_at_channel(i)->get_time_float(); //get time
@@ -408,10 +410,12 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	for(int i=0; i<nchannels; ++i)
 	  {
 	    TowerInfo *tower = towersOH->get_tower_at_channel(i);
+	    /*
 	    if(!_dataormc)
 	      {
 		if(tower->get_chi2() > 300*tower->get_energy()+250) continue;
 	      }
+	    */
 	    float time = towersOH->get_tower_at_channel(i)->get_time_float();
 	    if(!_dataormc){if(towersOHuc->get_tower_at_channel(i)->get_energy() == 0)
 	      {
@@ -456,10 +460,12 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	for(int i=0; i<nchannels; ++i)
 	  {
 	    TowerInfo *tower = towersIH->get_tower_at_channel(i);
+	    /*
 	    if(!_dataormc)
 	      {
 		if(tower->get_chi2() > 3000) continue;
 	      }
+	    */
 	    float time = towersIH->get_tower_at_channel(i)->get_time_float();
 	    if(!_dataormc){if(towersIHuc->get_tower_at_channel(i)->get_energy() == 0)
 	      {
