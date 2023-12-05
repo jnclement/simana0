@@ -765,6 +765,7 @@ int MDCTreeMaker::End(PHCompositeNode *topNode)
 	      nlow[1][i][j]/=ntot;
 	      nlow[2][i][j]/=ntot;
 	    }
+	  if(_debug > 2) cout << nhigh[0][i][j] << " " << nlow[0][i][j] << endl;
 	}
     }
   

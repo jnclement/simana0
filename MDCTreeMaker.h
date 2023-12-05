@@ -97,8 +97,8 @@ class MDCTreeMaker : public SubsysReco
   float truthparh_eta[100000];
   float truthparh_phi[100000];
   int truthparh_id[100000];
-  float nhigh[3][256][96];
-  float nlow[3][256][96];
+  float nhigh[3][96][256];
+  float nlow[3][96][256];
   float ntot;
   std::vector<int> baryons{2212,2112,2224,2214,2114,1114,3122,3222,3212,3112,
       3224,3214,3114,3322,3312,3324,3314,3334,4122,4222,4212,4112,4224,4214,
