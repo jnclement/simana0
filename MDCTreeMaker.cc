@@ -47,11 +47,27 @@ using namespace std;
 MDCTreeMaker::MDCTreeMaker(const std::string &name, const int dataormc, const int debug, const int correct):
   SubsysReco((name+"test").c_str())
 {
+  ntot = 0;
   _evtct = 0;
   _correct = correct;
   _foutname = name;  
   _dataormc = dataormc;
   _debug = debug;
+  for(int i=0; i<96; ++i)
+    {
+      for(int j=0; j<256; ++j)
+	{
+	  nlow[0][i][j] = -1;
+	  nhigh[0][i][j] = 0;
+	  if(i < 24 && j < 64)
+	    {
+	      nlow[1][i][j] = -1;
+	      nhigh[1][i][j] = 0;
+	      nlow[2][i][j] = -1;
+	      nhigh[2][i][j] = 0;
+	    }
+	}
+    }
 }
 
 //____________________________________________________________________________..
@@ -324,7 +340,7 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
       }
     */
       float EMCalEtot = 0;
-      ntot += 1.;
+      
     if(_debug) cout << "Getting EMCal info" << endl;
     if(towersEM) //get EMCal values
       {
@@ -351,20 +367,34 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 		if(tower->get_chi2() > 9000*tower->get_energy()+43000) continue;
 	      }
 	    */
-	    //if(_debug) cout << "Tower " << i << ": " << tower << endl;
+	    if(_debug > 1) cout << "Tower " << i << ": " << tower << endl;
  	    int key = towersEM->encode_key(i);
 	    float time = tower->get_time_float(); //get time
+	    if(!_dataormc && (time > 1.4 || time < -1))
+	      {
+		if(_debug > 2) cout << time << endl;
+		continue; //timing cut
+	      }
+	    if(!_dataormc)
+	      {
 	    if(tower->get_chi2() > 10000)
 	      {
 		int etabin = towersEM->getTowerEtaBin(key);
 		int phibin = towersEM->getTowerPhiBin(key);
 		nhigh[0][etabin][phibin]+=1.;
 	      }
+	      }
+	    if(_debug > 2) cout << "passed getting chi2" << endl;
+	    if(!_dataormc)
+	      {
 	    if(towersEMuc->get_tower_at_channel(i)->get_energy() < 10)
 	      {
 		int etabin = towersEM->getTowerEtaBin(key);
                 int phibin = towersEM->getTowerPhiBin(key);
+		if(nlow[0][etabin][phibin] < -0.5) nlow[0][etabin][phibin] = 0;
 		nlow[0][etabin][phibin] += 1.;
+		
+	      }
 	      }
 	    if(!_dataormc)
 	      {
@@ -377,15 +407,12 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 		    continue;
 		  }
 	      }
-	    if(!_dataormc && (time > 1.4 || time < -0.6))
-	      {
-		if(_debug > 2) cout << time << endl;
-		continue; //timing cut
-	      }
+
 	    emhot[sectorem] = tower->get_isHot();
 	    if(_debug > 2) cout << "i/time: " << i << " " << time << endl;
 	    int etabin = towersEM->getTowerEtaBin(key); //get eta and phi indices
 	    int phibin = towersEM->getTowerPhiBin(key);
+	    if(nlow[0][etabin][phibin] < -0.5) nlow[0][etabin][phibin] = 0;
 	    if(tower->get_energy() < -0.1 && _debug) cout << "negative energy found!: i/E "<< i << " " << tower->get_energy() << endl;
 	    //if(tower->get_energy() < -0.3 && _debug) continue;
 	    emcalen[sectorem] = tower->get_energy(); //actual tower energy (calibrated)
@@ -417,6 +444,7 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
       }
     if(_debug) cout << "total EMCal E: " << EMCalEtot << endl;
     if(_debug) cout << "Getting OHCal info" << endl;
+    float OHCalEtot = 0;
     if(towersOH) //essentially the same as for EMCal, just with fewer sectors and named OH
       {
 	int nchannels = 1536;
@@ -431,17 +459,25 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	    */
 	    int key = towersOH->encode_key(i);
 	    float time = towersOH->get_tower_at_channel(i)->get_time_float();
+	    if(!_dataormc && (time > 2 || time < -2)) continue;
+	    if(!_dataormc)
+	      {
 	    if(tower->get_chi2() > 10000)
 	      {
 		int etabin = towersOH->getTowerEtaBin(key);
 		int phibin = towersOH->getTowerPhiBin(key);
 		nhigh[2][etabin][phibin]+=1.;
 	      }
-	    if(towersOHuc->get_tower_at_channel(i)->get_energy() < 10)
+	      }
+	    if(!_dataormc)
+	      {
+		if(towersOHuc->get_tower_at_channel(i)->get_energy() == 0)
 	      {
 		int etabin = towersOH->getTowerEtaBin(key);
                 int phibin = towersOH->getTowerPhiBin(key);
+		if(nlow[2][etabin][phibin] < -0.5) nlow[2][etabin][phibin] = 0;
 		nlow[2][etabin][phibin] += 1.;
+	      }
 	      }
 	    if(!_dataormc){if(towersOHuc->get_tower_at_channel(i)->get_energy() == 0)
 	      {
@@ -451,12 +487,14 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
                   }
 		continue;
 	      }}
-	    if(!_dataormc && (time > 2 || time < -2)) continue;
+	    
 	    ohhot[sectoroh] = tower->get_isHot();
 	    
 	    int etabin = towersOH->getTowerEtaBin(key);
 	    int phibin = towersOH->getTowerPhiBin(key);
+	    if(nlow[2][etabin][phibin] < -0.5) nlow[2][etabin][phibin] = 0;
 	    ohcalen[sectoroh] = tower->get_energy();
+	    OHCalEtot += ohcalen[sectoroh];
 	    ohchi2[sectoroh] = tower->get_chi2();
 	    const RawTowerDefs::keytype geomkey = RawTowerDefs::encode_towerid(RawTowerDefs::CalorimeterId::HCALOUT, etabin, phibin);
 	    RawTowerGeom *tower_geom = geomOH->get_tower_geometry(geomkey);
@@ -479,7 +517,9 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	    sectoroh++;
 	  }
       }
+    if(_debug) cout << "OHCal E tot: " << OHCalEtot << endl;
     if(_debug) cout << "Getting IHCal info" << endl;
+    float IHCalEtot = 0;
     if(towersIH) //same
       {
 	int nchannels = 1536;
@@ -494,17 +534,22 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	    */
 	    float time = towersIH->get_tower_at_channel(i)->get_time_float();
 	    int key = towersIH->encode_key(i);
+	    if(!_dataormc && (time > 1 || time < -1)) continue;
 	    if(tower->get_chi2() > 10000)
 	      {
 		int etabin = towersIH->getTowerEtaBin(key);
 		int phibin = towersIH->getTowerPhiBin(key);
-		nhigh[2][etabin][phibin]+=1.;
+		nhigh[1][etabin][phibin]+=1.;
 	      }
-	    if(towersIHuc->get_tower_at_channel(i)->get_energy() < 10)
+	    if(!_dataormc)
+	      {
+	    if(towersIHuc->get_tower_at_channel(i)->get_energy() == 0)
 	      {
 		int etabin = towersIH->getTowerEtaBin(key);
                 int phibin = towersIH->getTowerPhiBin(key);
-		nlow[2][etabin][phibin] += 1.;
+		if(nlow[1][etabin][phibin] < -0.5) nlow[1][etabin][phibin] = 0;
+		nlow[1][etabin][phibin] += 1.;
+	      }
 	      }
 	    if(!_dataormc){if(towersIHuc->get_tower_at_channel(i)->get_energy() == 0)
 	      {
@@ -514,11 +559,13 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
                   }
 		continue;
 	      }}
-	    if(!_dataormc && (time > 1 || time < -1)) continue;
+	    
 	    ihhot[sectorih] = tower->get_isHot();
 	    int etabin = towersIH->getTowerEtaBin(key);
 	    int phibin = towersIH->getTowerPhiBin(key);
+	    if(nlow[1][etabin][phibin] < -0.5) nlow[1][etabin][phibin] = 0;
 	    ihcalen[sectorih] = tower->get_energy();
+	    IHCalEtot += ihcalen[sectorih];
 	    ihchi2[sectorih] = tower->get_chi2();
 	    const RawTowerDefs::keytype geomkey = RawTowerDefs::encode_towerid(RawTowerDefs::CalorimeterId::HCALIN, etabin, phibin);
 	    RawTowerGeom *tower_geom = geomIH->get_tower_geometry(geomkey);
@@ -541,6 +588,7 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	    sectorih++;
 	  }
       }
+    if(_debug) cout << "IHCal E tot: " << IHCalEtot << endl;
     if(_debug) cout << "Getting MBD info" << endl;
     /*
     if(towersMB && !_dataormc) //get MBD info
@@ -710,7 +758,7 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
     }
   
   if(_debug) cout << "Filling" << endl;
-
+  ntot += 1;
   _tree->Fill();
   if(_debug)
     {
@@ -750,29 +798,18 @@ int MDCTreeMaker::End(PHCompositeNode *topNode)
       std::cout << "MDCTreeMaker::End(PHCompositeNode *topNode) This is the End..." << std::endl;
     }
 
-
-  TTree* outt = new TTree("outt","");
-  for(int i=0; i<96; i++)
-    {
-      for(int j=0; j<256; ++j)
-	{
-	  nhigh[0][i][j]/=ntot;
-	  nlow[0][i][j]/=ntot;
-	  if(i<24 && j<96)
-	    {
-	      nhigh[1][i][j]/=ntot;
-	      nhigh[2][i][j]/=ntot;
-	      nlow[1][i][j]/=ntot;
-	      nlow[2][i][j]/=ntot;
-	    }
-	  if(_debug > 2) cout << nhigh[0][i][j] << " " << nlow[0][i][j] << endl;
-	}
-    }
+  _f->cd();
   
+  TTree* outt = new TTree("outt","");
+  if(_debug) cout << ntot << endl;
   outt->Branch("nhighem",nhigh[0],"nhighem[96][256]/F");
-  outt->Branch("nhighih",nhigh[1],"nhighih[24][96]/F");
-  outt->Branch("nhighoh",nhigh[2],"nhighoh[24][96]/F");
-
+  outt->Branch("nhighih",nhigh[1],"nhighih[24][64]/F");
+  outt->Branch("nhighoh",nhigh[2],"nhighoh[24][64]/F");
+  outt->Branch("nlowem",nlow[0],"nlowem[96][256]/F");
+  outt->Branch("nlowih",nlow[1],"nlowih[24][64]/F");
+  outt->Branch("nlowoh",nlow[2],"nlowoh[24][64]/F");
+  outt->Branch("ntot",&ntot,"ntot/I");
+  outt->Fill();
   _f->Write();
   _f->Close();
 
