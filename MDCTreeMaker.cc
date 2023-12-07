@@ -96,23 +96,23 @@ int MDCTreeMaker::Init(PHCompositeNode *topNode)
 
   if(!_dataormc)
     {
-      _tree->Branch("emcalt",emcalt,"emcalt[sectorem]/F"); //time value of EMCal sector
-      _tree->Branch("ihcalt",ihcalt,"ihcalt[sectorih]/F");
-      _tree->Branch("ohcalt",ohcalt,"ohcalt[sectoroh]/F");
+      //_tree->Branch("emcalt",emcalt,"emcalt[sectorem]/F"); //time value of EMCal sector
+      //_tree->Branch("ihcalt",ihcalt,"ihcalt[sectorih]/F");
+      //_tree->Branch("ohcalt",ohcalt,"ohcalt[sectoroh]/F");
       
-      _tree->Branch("emcaladc",emcaladc,"emcaladc[sectorem]/I"); //time value of EMCal sector
-      _tree->Branch("ihcaladc",ihcaladc,"ihcaladc[sectorih]/I");
-      _tree->Branch("ohcaladc",ohcaladc,"ohcaladc[sectoroh]/I");
-      _tree->Branch("mbdtype",mbdtype,"mbdtype[sectormb]/I"); //MBD type (charge or time)
-      _tree->Branch("mbdside",mbdside,"mbdside[sectormb]/I"); //MBD side (N/S)
-      _tree->Branch("mbdchan",mbdchan,"mbdchan[sectormb]/I"); //MBD channel number (0-63 on each side)
-      _tree->Branch("emchi2",emchi2,"emchi2[sectorem]/F");
-      _tree->Branch("ihchi2",ihchi2,"ihchi2[sectorih]/F");
-      _tree->Branch("ohchi2",ohchi2,"ohchi2[sectoroh]/F");
+      //_tree->Branch("emcaladc",emcaladc,"emcaladc[sectorem]/I"); //time value of EMCal sector
+      //_tree->Branch("ihcaladc",ihcaladc,"ihcaladc[sectorih]/I");
+      //_tree->Branch("ohcaladc",ohcaladc,"ohcaladc[sectoroh]/I");
+      //_tree->Branch("mbdtype",mbdtype,"mbdtype[sectormb]/I"); //MBD type (charge or time)
+      //_tree->Branch("mbdside",mbdside,"mbdside[sectormb]/I"); //MBD side (N/S)
+      //_tree->Branch("mbdchan",mbdchan,"mbdchan[sectormb]/I"); //MBD channel number (0-63 on each side)
+      //_tree->Branch("emchi2",emchi2,"emchi2[sectorem]/F");
+      //_tree->Branch("ihchi2",ihchi2,"ihchi2[sectorih]/F");
+      //_tree->Branch("ohchi2",ohchi2,"ohchi2[sectoroh]/F");
     }
-  _tree->Branch("ihcalpos",ihcalpos,"ihcalpos[sectorih][3]/F"); //position (xyz) of EMCal sector center
-  _tree->Branch("emcalpos",emcalpos,"emcalpos[sectorem][3]/F");
-  _tree->Branch("ohcalpos",ohcalpos,"ohcalpos[sectoroh][3]/F");
+  //_tree->Branch("ihcalpos",ihcalpos,"ihcalpos[sectorih][3]/F"); //position (xyz) of EMCal sector center
+  //_tree->Branch("emcalpos",emcalpos,"emcalpos[sectorem][3]/F");
+  //_tree->Branch("ohcalpos",ohcalpos,"ohcalpos[sectoroh][3]/F");
   _tree->Branch("emetacor",emetacor,"emetacor[sectorem]/F"); //corrected eta value **NOT A BIN INDEX**
   _tree->Branch("ihetacor",ihetacor,"ihetacor[sectorih]/F");
   _tree->Branch("ohetacor",ohetacor,"ohetacor[sectoroh]/F");
