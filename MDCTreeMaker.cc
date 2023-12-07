@@ -47,7 +47,6 @@ using namespace std;
 MDCTreeMaker::MDCTreeMaker(const std::string &name, const int dataormc, const int debug, const int correct):
   SubsysReco((name+"test").c_str())
 {
-  ntot = 0;
   _evtct = 0;
   _correct = correct;
   _foutname = name;  
@@ -57,15 +56,9 @@ MDCTreeMaker::MDCTreeMaker(const std::string &name, const int dataormc, const in
     {
       for(int j=0; j<256; ++j)
 	{
-	  nlow[0][i][j] = -1;
-	  nhigh[0][i][j] = 0;
-	  if(i < 24 && j < 64)
-	    {
-	      nlow[1][i][j] = -1;
-	      nhigh[1][i][j] = 0;
-	      nlow[2][i][j] = -1;
-	      nhigh[2][i][j] = 0;
-	    }
+	  hotmap[0][i][j] = 0;
+	  hotmap[1][i][j] = 0;
+	  hotmap[2][i][j] = 0;
 	}
     }
 }
@@ -86,7 +79,6 @@ int MDCTreeMaker::Init(PHCompositeNode *topNode)
   _tree = new TTree("ttree","a persevering date tree");
   
   _tree->Branch("track_vtx",track_vtx,"track_vtx[3]/F"); //svtx and mbd vtx
-  _tree->Branch("mbd_vtx",mbd_vtx,"mbd_vtx[3]/F"); //mbd vtx
   _tree->Branch("sectorem",&sectorem,"sectorem/I"); //Number of hit sectors in the emcal
   _tree->Branch("sectorih",&sectorih,"sectorih/I"); // IHcal etc.
   _tree->Branch("sectoroh",&sectoroh,"sectoroh/I");
@@ -108,10 +100,6 @@ int MDCTreeMaker::Init(PHCompositeNode *topNode)
       _tree->Branch("ihcalt",ihcalt,"ihcalt[sectorih]/F");
       _tree->Branch("ohcalt",ohcalt,"ohcalt[sectoroh]/F");
       
-      _tree->Branch("emhot",emhot,"emhot[sectorem]/I"); //time value of EMCal sector
-      _tree->Branch("ihhot",ihhot,"ihhot[sectorih]/I");
-      _tree->Branch("ohhot",ohhot,"ohhot[sectoroh]/I");
-
       _tree->Branch("emcaladc",emcaladc,"emcaladc[sectorem]/I"); //time value of EMCal sector
       _tree->Branch("ihcaladc",ihcaladc,"ihcaladc[sectorih]/I");
       _tree->Branch("ohcaladc",ohcaladc,"ohcaladc[sectoroh]/I");
@@ -229,74 +217,8 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
       }
     if(_debug) cout << "EM geomtry node: " << geomEM << endl;
     if(_debug) cout << "Getting vertex" << endl;
-    /*
-    int mapnum = 0;
-    //auto j=(_dataormc?vertexmap:danvtx)->begin();
-    auto j = vertexmap->begin();
-    //if(j!=(_dataormc?vertexmap:danvtx)->end())
-    if(j!=vertexmap->end())
-      {
-	int vtxnum = 0;
-	if(_debug) cout << "j iterator exists for vertexmap" << endl;
-	GlobalVertex *vtx = j->second;
-	if(_debug) cout << "Got j iterator.second for vertexmap" << endl;
-	if(vtx)
-	  {
-	    track_vtx[0] = vtx->get_x();
-	    track_vtx[1] = vtx->get_y();
-	    track_vtx[2] = vtx->get_z();
-	    if (track_vtx[0] == 0 && track_vtx[1] == 0 && track_vtx[2] == 0) 
-	      { //remove anything with identically zero vertex (errors)
-		if(_debug) cout << "zvtx: " << track_vtx[2] << " Vertex identically 0, skipping event" << endl;
-		return Fun4AllReturnCodes::EVENT_OK;
-	      }
-	    if (fabs(track_vtx[2]) > 50.0) 
-	      { //cut on 50 - may widen in the future
-		if(_debug) cout << "Vertex outside of 50 cm, skipping event" << endl;
-		return Fun4AllReturnCodes::EVENT_OK;
-	      }
-	  }
-	else
-	  {
-	    if(_debug) cout << "NO VERTEX FOUND IN GLOBALVERTEXMAP AT ALL! CANCEL EVENT" << endl;
-	    return Fun4AllReturnCodes::EVENT_OK;
-	  }
-	if(_debug) cout << "Mapnum/vtx/z: " << mapnum << " " << vtx << " " << vtx->get_z() << endl;
-	for(auto i= vtx->begin_vtxids(); i!=vtx->end_vtxids(); ++i)
-	  {
-	    if(_debug) cout << "mapnum/vtxnum/type/id/x/y/z: "<< mapnum << " " <<vtxnum << " " << i->first << " " << i->second << endl;
-	    vtxnum++;
-	  }
-	mapnum++;
-      }
-    else
-      {
-	if(_debug) cout << "no vertexmap, skipping event" << endl;
-	return Fun4AllReturnCodes::EVENT_OK;
-      }
-    */
-    /*
-    auto iter = vertexmap->begin(); //z vertex getting
-    if(iter != vertexmap->end()) 
-      {
-	//GlobalVertex *vtx = iter->second;
-	GlobalVertex *vtx = vertexmap->get(GlobalVertex::MBD);
-	if(!vtx)
-	  {
-	    if(_debug) cout << "no MBD VTX!" << endl;
-	  }
-	if(_debug) vertexmap->identify();
-	if(_debug && vtx) cout << "zvtx: " << vtx->get_z() << endl;
-	if(vtx)
-	  {
-	    mbd_vtx[0] = vtx->get_x();
-	    mbd_vtx[1] = vtx->get_y();
-	    mbd_vtx[2] = vtx->get_z();
-	  } 
-      }
-    */
-    //if(_dataormc && 1)
-      {
+
+    {
 	MbdVertexMap* mbdmap = findNode::getClass<MbdVertexMap>(topNode, "MbdVertexMap");
 	if(_debug) cout << "mbdmap: " << mbdmap << endl;
 	if(!mbdmap || mbdmap->empty())
@@ -319,7 +241,7 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	    return Fun4AllReturnCodes::EVENT_OK;
 	  }
 	if(_debug) cout << "about to get mbdvtx z value for mbdreco module with vertex pointer: " << mbdvtx << " type: " << typeid(mbdvtx).name() << endl;
-	track_vtx[2] = mbdvtx->get_z() - (_dataormc?0:0);//18.3227);
+	track_vtx[2] = mbdvtx->get_z();
 	if(_debug) cout << "got mbdvtx z value for mbdreco module" << endl;
 	if(track_vtx[2] == 0 || abs(track_vtx[2]) > 50)
 	  {
@@ -333,12 +255,6 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	{
 	  cout << "MBD zvtx: " << track_vtx[2] << endl;
 	}
-	/*
-	  else
-      {
-	return Fun4AllReturnCodes::EVENT_OK;
-      }
-    */
       float EMCalEtot = 0;
       
     if(_debug) cout << "Getting EMCal info" << endl;
@@ -348,54 +264,19 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	for(int i=0; i<nchannels; ++i) //loop over channels
 	  {
 	    TowerInfo *tower = towersEM->get_tower_at_channel(i); //get EMCal tower
-	    /*
-	    if(_debug)
-	      {
-		TowerInfo* rawtower = towersEMuc->get_tower_at_channel(i);
-		int rawkey = towersEMuc->encode_key(i);
-		int raweta = towersEMuc->getTowerEtaBin(rawkey);
-		int realeta = towersEM->getTowerEtaBin(towersEM->encode_key(i));
-		if(raweta == 95 || raweta == 8)
-		  {
-		    cout << "raw/calib eta and raw/calib E: " << raweta << " " << realeta << " " << rawtower->get_energy() << " " << tower->get_energy() << endl;
-		  }
-	      }
-	    */
-	    /*
-	    if(!_dataormc)
-	      {
-		if(tower->get_chi2() > 9000*tower->get_energy()+43000) continue;
-	      }
-	    */
-	    if(_debug > 1) cout << "Tower " << i << ": " << tower << endl;
- 	    int key = towersEM->encode_key(i);
-	    float time = tower->get_time_float(); //get time
-	    if(!_dataormc && (time > 1.4 || time < -1))
-	      {
-		if(_debug > 2) cout << time << endl;
-		continue; //timing cut
-	      }
-	    if(!_dataormc)
-	      {
-	    if(tower->get_chi2() > 10000)
+	    int key = towersEM->encode_key(i);
+	    if(tower->get_isHot())
 	      {
 		int etabin = towersEM->getTowerEtaBin(key);
 		int phibin = towersEM->getTowerPhiBin(key);
-		nhigh[0][etabin][phibin]+=1.;
+		hotmap[0][etabin][phibin]++;
 	      }
-	      }
-	    if(_debug > 2) cout << "passed getting chi2" << endl;
-	    if(!_dataormc)
-	      {
-	    if(towersEMuc->get_tower_at_channel(i)->get_energy() < 10)
-	      {
-		int etabin = towersEM->getTowerEtaBin(key);
-                int phibin = towersEM->getTowerPhiBin(key);
-		if(nlow[0][etabin][phibin] < -0.5) nlow[0][etabin][phibin] = 0;
-		nlow[0][etabin][phibin] += 1.;
-		
-	      }
-	      }
+	    if(!tower->get_isGood()) continue;
+
+	    if(_debug > 1) cout << "Tower " << i << ": " << tower << endl;
+ 	    
+	    float time = tower->get_time_float(); //get time
+
 	    if(!_dataormc)
 	      {
 		if(towersEMuc->get_tower_at_channel(i)->get_energy() == 0)
@@ -408,14 +289,13 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 		  }
 	      }
 
-	    emhot[sectorem] = tower->get_isHot();
 	    if(_debug > 2) cout << "i/time: " << i << " " << time << endl;
 	    int etabin = towersEM->getTowerEtaBin(key); //get eta and phi indices
 	    int phibin = towersEM->getTowerPhiBin(key);
-	    if(nlow[0][etabin][phibin] < -0.5) nlow[0][etabin][phibin] = 0;
 	    if(tower->get_energy() < -0.1 && _debug) cout << "negative energy found!: i/E "<< i << " " << tower->get_energy() << endl;
 	    //if(tower->get_energy() < -0.3 && _debug) continue;
 	    emcalen[sectorem] = tower->get_energy(); //actual tower energy (calibrated)
+	    //if(emcalen[sectorem] < 0.03) continue;
 	    emchi2[sectorem] = tower->get_chi2();
 	    EMCalEtot += emcalen[sectorem];
 	    const RawTowerDefs::keytype geomkey = RawTowerDefs::encode_towerid(RawTowerDefs::CalorimeterId::CEMC, etabin, phibin);
@@ -436,8 +316,7 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	    emetacor[sectorem] = neweta;
 	    emcaletabin[sectorem] = etabin; //get eta and phi of towers
 	    emcalphibin[sectorem] = phibin;
-	    //if(_debug && abs(towersEMuc->get_tower_at_channel(i)->get_energy()) < 2) cout << etabin << " " << phibin << " " << towersEMuc->get_tower_at_channel(i)->get_energy() << " " << tower->get_isBadChi2() << " " << tower->get_isHot() << " " << tower->get_isBadTime() << " " << tower->get_isGood() << endl;
-	    //if(_debug && etabin==0) cout << etabin << " " << phibin << endl;
+	    
 	    sectorem++;
 	  }
 	if(_debug) cout << sectorem << endl;
@@ -451,34 +330,18 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	for(int i=0; i<nchannels; ++i)
 	  {
 	    TowerInfo *tower = towersOH->get_tower_at_channel(i);
-	    /*
-	    if(!_dataormc)
-	      {
-		if(tower->get_chi2() > 300*tower->get_energy()+250) continue;
-	      }
-	    */
 	    int key = towersOH->encode_key(i);
-	    float time = towersOH->get_tower_at_channel(i)->get_time_float();
-	    if(!_dataormc && (time > 2 || time < -2)) continue;
-	    if(!_dataormc)
-	      {
-	    if(tower->get_chi2() > 10000)
+	    if(tower->get_isHot())
 	      {
 		int etabin = towersOH->getTowerEtaBin(key);
 		int phibin = towersOH->getTowerPhiBin(key);
-		nhigh[2][etabin][phibin]+=1.;
+		hotmap[2][etabin][phibin]++;
 	      }
-	      }
-	    if(!_dataormc)
-	      {
-		if(towersOHuc->get_tower_at_channel(i)->get_energy() == 0)
-	      {
-		int etabin = towersOH->getTowerEtaBin(key);
-                int phibin = towersOH->getTowerPhiBin(key);
-		if(nlow[2][etabin][phibin] < -0.5) nlow[2][etabin][phibin] = 0;
-		nlow[2][etabin][phibin] += 1.;
-	      }
-	      }
+	    if(!tower->get_isGood()) continue;
+	    
+	    float time = towersOH->get_tower_at_channel(i)->get_time_float();
+	    //if(!_dataormc && (time > 2 || time < -2)) continue;
+	    	    
 	    if(!_dataormc){if(towersOHuc->get_tower_at_channel(i)->get_energy() == 0)
 	      {
 		if(_debug > 1)
@@ -488,12 +351,10 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 		continue;
 	      }}
 	    
-	    ohhot[sectoroh] = tower->get_isHot();
-	    
 	    int etabin = towersOH->getTowerEtaBin(key);
 	    int phibin = towersOH->getTowerPhiBin(key);
-	    if(nlow[2][etabin][phibin] < -0.5) nlow[2][etabin][phibin] = 0;
 	    ohcalen[sectoroh] = tower->get_energy();
+	    //if(ohcalen[sectoroh] < 0.03) continue;
 	    OHCalEtot += ohcalen[sectoroh];
 	    ohchi2[sectoroh] = tower->get_chi2();
 	    const RawTowerDefs::keytype geomkey = RawTowerDefs::encode_towerid(RawTowerDefs::CalorimeterId::HCALOUT, etabin, phibin);
@@ -526,6 +387,14 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	for(int i=0; i<nchannels; ++i)
 	  {
 	    TowerInfo *tower = towersIH->get_tower_at_channel(i);
+	    int key = towersIH->encode_key(i);
+	    if(tower->get_isHot())
+	      {
+		int etabin = towersIH->getTowerEtaBin(key);
+		int phibin = towersIH->getTowerPhiBin(key);
+		hotmap[1][etabin][phibin]++;
+	      }
+	    if(!tower->get_isGood()) continue;
 	    /*
 	    if(!_dataormc)
 	      {
@@ -533,24 +402,7 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	      }
 	    */
 	    float time = towersIH->get_tower_at_channel(i)->get_time_float();
-	    int key = towersIH->encode_key(i);
-	    if(!_dataormc && (time > 1 || time < -1)) continue;
-	    if(tower->get_chi2() > 10000)
-	      {
-		int etabin = towersIH->getTowerEtaBin(key);
-		int phibin = towersIH->getTowerPhiBin(key);
-		nhigh[1][etabin][phibin]+=1.;
-	      }
-	    if(!_dataormc)
-	      {
-	    if(towersIHuc->get_tower_at_channel(i)->get_energy() == 0)
-	      {
-		int etabin = towersIH->getTowerEtaBin(key);
-                int phibin = towersIH->getTowerPhiBin(key);
-		if(nlow[1][etabin][phibin] < -0.5) nlow[1][etabin][phibin] = 0;
-		nlow[1][etabin][phibin] += 1.;
-	      }
-	      }
+
 	    if(!_dataormc){if(towersIHuc->get_tower_at_channel(i)->get_energy() == 0)
 	      {
 		if(_debug > 1)
@@ -560,11 +412,10 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 		continue;
 	      }}
 	    
-	    ihhot[sectorih] = tower->get_isHot();
 	    int etabin = towersIH->getTowerEtaBin(key);
 	    int phibin = towersIH->getTowerPhiBin(key);
-	    if(nlow[1][etabin][phibin] < -0.5) nlow[1][etabin][phibin] = 0;
 	    ihcalen[sectorih] = tower->get_energy();
+	    //if(ihcalen[sectorih] < 0.03) continue;
 	    IHCalEtot += ihcalen[sectorih];
 	    ihchi2[sectorih] = tower->get_chi2();
 	    const RawTowerDefs::keytype geomkey = RawTowerDefs::encode_towerid(RawTowerDefs::CalorimeterId::HCALIN, etabin, phibin);
@@ -590,30 +441,6 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
       }
     if(_debug) cout << "IHCal E tot: " << IHCalEtot << endl;
     if(_debug) cout << "Getting MBD info" << endl;
-    /*
-    if(towersMB && !_dataormc) //get MBD info
-      {
-	int nchannels = 256;
-	for(int i=0; i<nchannels; ++i)
-	  {
-	    TowerInfo *tower = towersMB->get_tower_at_channel(i); //get mbd channel
-	    int key = towersMB->encode_key(i);
-	    int type = (key >> 6) & 1; //encodes type from key (only way to get it)
-	    int side = (key >> 7) & 1; //encodes side from key (only way to get it)
-	    int chan = key & 0x3f; //get MBD channel from key
-
-	    mbenrgy[sectormb] = tower->get_energy(); //fill fields
-	    mbdtype[sectormb] = type;
-	    mbdside[sectormb] = side;
-	    mbdchan[sectormb] = chan;
-	    sectormb++;
-	  }
-      }
-    else if(!_dataormc)
-      {
-	cout << "no MBD towers!!!" << endl;
-      }
-    */
   }
       MbdPmtContainer *mbdtow = findNode::getClass<MbdPmtContainer>(topNode, "MbdPmtContainer");
       if(!mbdtow)
@@ -758,7 +585,6 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
     }
   
   if(_debug) cout << "Filling" << endl;
-  ntot += 1;
   _tree->Fill();
   if(_debug)
     {
@@ -799,16 +625,8 @@ int MDCTreeMaker::End(PHCompositeNode *topNode)
     }
 
   _f->cd();
-  
-  TTree* outt = new TTree("outt","");
-  if(_debug) cout << ntot << endl;
-  outt->Branch("nhighem",nhigh[0],"nhighem[96][256]/F");
-  outt->Branch("nhighih",nhigh[1],"nhighih[24][64]/F");
-  outt->Branch("nhighoh",nhigh[2],"nhighoh[24][64]/F");
-  outt->Branch("nlowem",nlow[0],"nlowem[96][256]/F");
-  outt->Branch("nlowih",nlow[1],"nlowih[24][64]/F");
-  outt->Branch("nlowoh",nlow[2],"nlowoh[24][64]/F");
-  outt->Branch("ntot",&ntot,"ntot/I");
+  TTree* outt = new TTree("outt","outt for hotmap");
+  outt->Branch("hotmap",hotmap,"hotmap[3][96][256]/I");
   outt->Fill();
   _f->Write();
   _f->Close();
