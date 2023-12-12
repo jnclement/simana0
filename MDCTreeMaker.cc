@@ -271,7 +271,7 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 		int phibin = towersEM->getTowerPhiBin(key);
 		hotmap[0][etabin][phibin]++;
 	      }
-	    if(!tower->get_isGood()) continue;
+	    //if(!tower->get_isGood()) continue;
 
 	    if(_debug > 1) cout << "Tower " << i << ": " << tower << endl;
  	    
@@ -301,6 +301,7 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	    const RawTowerDefs::keytype geomkey = RawTowerDefs::encode_towerid(RawTowerDefs::CalorimeterId::CEMC, etabin, phibin);
 	    RawTowerGeom *tower_geom = geomEM->get_tower_geometry(geomkey); //encode tower geometry
 	    //if(_debug) cout << "Tower geom: " << tower_geom << endl;
+	    if( !_dataormc && (time > 1 || time < -2)) continue;
 	    emcalt[sectorem] = time; //store time value
 	    if(!_dataormc) emcaladc[sectorem] = towersEMuc->get_tower_at_channel(i)->get_energy(); //emcal ADC value (uncalibrated "energy")
 	    emcalpos[sectorem][0] = tower_geom->get_center_x(); //get positions of towers
@@ -337,11 +338,11 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 		int phibin = towersOH->getTowerPhiBin(key);
 		hotmap[2][etabin][phibin]++;
 	      }
-	    if(!tower->get_isGood()) continue;
+	    //if(!tower->get_isGood()) continue;
 	    
 	    float time = towersOH->get_tower_at_channel(i)->get_time_float();
 	    //if(!_dataormc && (time > 2 || time < -2)) continue;
-	    	    
+	    if(!_dataormc && (time > 3.5 || time < -3)) continue;
 	    if(!_dataormc){if(towersOHuc->get_tower_at_channel(i)->get_energy() == 0)
 	      {
 		if(_debug > 1)
@@ -394,7 +395,7 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 		int phibin = towersIH->getTowerPhiBin(key);
 		hotmap[1][etabin][phibin]++;
 	      }
-	    if(!tower->get_isGood()) continue;
+	    //if(!tower->get_isGood()) continue;
 	    /*
 	    if(!_dataormc)
 	      {
@@ -402,7 +403,7 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
 	      }
 	    */
 	    float time = towersIH->get_tower_at_channel(i)->get_time_float();
-
+	    if(!_dataormc && (time > 2 || time < -2.5)) continue;
 	    if(!_dataormc){if(towersIHuc->get_tower_at_channel(i)->get_energy() == 0)
 	      {
 		if(_debug > 1)
