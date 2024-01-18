@@ -49,9 +49,9 @@ class MDCTreeMaker : public SubsysReco
   float emcalen[24576];
   float ihcalen[1536];
   float ohcalen[1536];
-  int emcalt[24576];
-  int ihcalt[1536];
-  int ohcalt[1536];
+  float emcalt[24576];
+  float ihcalt[1536];
+  float ohcalt[1536];
   int emcaladc[24576];
   int ihcaladc[1536];
   int ohcaladc[1536];
@@ -81,6 +81,9 @@ class MDCTreeMaker : public SubsysReco
   float emchi2[24576];
   float ihchi2[1536];
   float ohchi2[1536];
+  bool emishot[24576];
+  bool ihishot[1536];
+  bool ohishot[1536];
   int truthpar_n;
   int truthpar_nh;
   float truthpar_pz[100000];
