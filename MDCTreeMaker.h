@@ -55,6 +55,9 @@ class MDCTreeMaker : public SubsysReco
   int emcaladc[24576];
   int ihcaladc[1536];
   int ohcaladc[1536];
+  float emcalzs[24576];
+  float ihcalzs[1536];
+  float ohcalzs[1536];
   float emcalpos[24576][3];
   float ihcalpos[1536][3];
   float ohcalpos[1536][3];
@@ -65,9 +68,8 @@ class MDCTreeMaker : public SubsysReco
   int ihcalphibin[1536];
   int ohcalphibin[1536];
   float mbenrgy[256];
-  int mbdtype[256];
-  int mbdside[256];
-  int mbdchan[256];
+  int centbin;
+  bool isMinBias;
   int npart;
   int ncoll;
   float bimp;

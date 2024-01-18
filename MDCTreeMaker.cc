@@ -42,6 +42,7 @@
 #include <iostream>
 
 #include <centrality/CentralityInfov1.h>
+#include <calotrigger/MinimumBiasInfo.h>
 
 using namespace std;
 //____________________________________________________________________________..
@@ -84,6 +85,9 @@ int MDCTreeMaker::Init(PHCompositeNode *topNode)
   _tree->Branch("emcalen",emcalen,"emcalen[sectorem]/F"); //energy per EMCal sector
   _tree->Branch("ihcalen",ihcalen,"ihcalen[sectorih]/F"); // per IHCal sector (etc.)
   _tree->Branch("ohcalen",ohcalen,"ohcalen[sectoroh]/F");
+  _tree->Branch("emcalzs",emcalzs,"emcalzs[sectorem]/F"); //energy per EMCal sector
+  _tree->Branch("ihcalzs",ihcalzs,"ihcalzs[sectorih]/F"); // per IHCal sector (etc.)
+  _tree->Branch("ohcalzs",ohcalzs,"ohcalzs[sectoroh]/F");
   _tree->Branch("emcaletabin",emcaletabin,"emcaletabin[sectorem]/I"); //eta of EMCal sector
   _tree->Branch("ihcaletabin",ihcaletabin,"ihcaletabin[sectorih]/I");
   _tree->Branch("ohcaletabin",ohcaletabin,"ohcaletabin[sectoroh]/I");
@@ -92,6 +96,8 @@ int MDCTreeMaker::Init(PHCompositeNode *topNode)
   _tree->Branch("ohcalphibin",ohcalphibin,"ohcalphibin[sectoroh]/I");
   _tree->Branch("sectormb",&sectormb,"sectormb/I");
   _tree->Branch("mbenrgy",mbenrgy,"mbenrgy[sectormb]/F"); //MBD reported value (could be charge or time)
+  _tree->Branch("isMinBias",isMinBias,"isMinBias/O");
+  _tree->Branch("centbin",centbin,"centbin/I");
 
   if(!_dataormc)
     {
@@ -101,9 +107,6 @@ int MDCTreeMaker::Init(PHCompositeNode *topNode)
       _tree->Branch("emcaladc",emcaladc,"emcaladc[sectorem]/I"); //time value of EMCal sector
       _tree->Branch("ihcaladc",ihcaladc,"ihcaladc[sectorih]/I");
       _tree->Branch("ohcaladc",ohcaladc,"ohcaladc[sectoroh]/I");
-      _tree->Branch("mbdtype",mbdtype,"mbdtype[sectormb]/I"); //MBD type (charge or time)
-      _tree->Branch("mbdside",mbdside,"mbdside[sectormb]/I"); //MBD side (N/S)
-      _tree->Branch("mbdchan",mbdchan,"mbdchan[sectormb]/I"); //MBD channel number (0-63 on each side)
       _tree->Branch("emchi2",emchi2,"emchi2[sectorem]/F");
       _tree->Branch("ihchi2",ihchi2,"ihchi2[sectorih]/F");
       _tree->Branch("ohchi2",ohchi2,"ohchi2[sectoroh]/F");
@@ -183,20 +186,18 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
       towersIHzs = findNode::getClass<TowerInfoContainerv3>(topNode, "WAVEFORMS_HCALIN");
       towersOHzs = findNode::getClass<TowerInfoContainerv3>(topNode, "WAVEFORMS_HCALOUT");
     }
-    //TowerInfoContainerv1 *towersMB = findNode::getClass<TowerInfoContainerv1>(topNode, "TOWERS_MBD");
+
     
-    //GlobalVertexMap *vertexmap = findNode::getClass<GlobalVertexMap>(topNode,"GlobalVertexMap");
-    //GlobalVertexMap* danvtx = findNode::getClass<GlobalVertexMap>(topNode,"DansSpecialVertexMap");
 
     if(_debug) cout << "Checking that all necessary objects exist" << endl;
     if(!towersEM || !towersIH || !towersOH || !geomEM || !geomIH || !geomOH)
     {
-      cout << "em/ih/oh/gem/gih/goh/vtx: " << towersEM << " " << towersIH << " " << towersOH << " " << geomEM << " " << geomIH << " " << geomOH << endl;
+      cout << "em/ih/oh/gem/gih/goh: " << towersEM << " " << towersIH << " " << towersOH << " " << geomEM << " " << geomIH << " " << geomOH << endl;
       return Fun4AllReturnCodes::EVENT_OK; //remove events which do not have all required information
     }
     if(!_dataormc && (!towersIHuc || !towersEMuc || !towersOHuc))
     {
-      cout << "uce/uci/uco/mb/dvtx: " << " " << towersEMuc << " " << towersIHuc << " " << towersOHuc << endl; 
+      cout << "uce/uci/uco: " << " " << towersEMuc << " " << towersIHuc << " " << towersOHuc << endl; 
       return Fun4AllReturnCodes::EVENT_OK;
     }
     if(!towersEMzs || !towersIHzs || !towersOHzs) 
@@ -205,6 +206,27 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
       return Fun4AllReturnCodes::EVENT_OK;
     }
     if(_debug) cout << "EM geomtry node: " << geomEM << endl;
+    
+    if (_debug) cout << "Getting Centrality and MinimumBiasInfo nodes" << endl;
+    CentralityInfov1 *centrality = findNode::getClass<CentralityInfov1>(topNode, "CentralityInfo");
+    if (!centrality)
+    {
+      std::cout << "no centrality node " << std::endl;
+      return Fun4AllReturnCodes::ABORTRUN;
+    }
+
+    MinimumBiasInfo *minimumbiasinfo = findNode::getClass<MinimumBiasInfo>(topNode, "MinimumBiasInfo");
+    if (!minimumbiasinfo)
+    {
+      std::cout << "no minimumbias node " << std::endl;
+      return Fun4AllReturnCodes::ABORTRUN;
+    }
+
+    float centile = (centrality->has_centile(CentralityInfo::PROP::mbd_NS) ? centrality->get_centile(CentralityInfo::PROP::mbd_NS) : -999.99);
+    centbin = centile*100;
+    isMinBias = minimumbiasinfo->isAuAuMinimumBias();
+    if(_debug) cout << "centrality: " << centbin << " is MB: " << isMinBias << endl;
+
     if(_debug) cout << "Getting vertex" << endl;
 
     {
@@ -291,8 +313,8 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
         RawTowerGeom *tower_geom = geomEM->get_tower_geometry(geomkey); //encode tower geometry
         emcalt[sectorem] = time; //store time value
         if(!_dataormc) emcaladc[sectorem] = towersEMuc->get_tower_at_channel(i)->get_energy(); //emcal ADC value (uncalibrated "energy")
-        if (!_datormc) emcalzs[sectorem] = towersEMzs->get_tower_at_channel(i)->get_energy(); // emcal zero suppressed calibrated value (GeV)
-        if (_datormc) emcalzs[sectorem] = towersEMzs->get_tower_at_channel(i)->get_waveform_value(6) - towersEMzs->get_tower_at_channel(i)->get_waveform_value(0);
+        if (!_dataormc) emcalzs[sectorem] = towersEMzs->get_tower_at_channel(i)->get_energy(); // emcal zero suppressed calibrated value (GeV)
+        if (_dataormc) emcalzs[sectorem] = towersEMzs->get_tower_at_channel(i)->get_waveform_value(6) - towersEMzs->get_tower_at_channel(i)->get_waveform_value(0);
         emcalpos[sectorem][0] = tower_geom->get_center_x(); //get positions of towers
         emcalpos[sectorem][1] = tower_geom->get_center_y();
         emcalpos[sectorem][2] = tower_geom->get_center_z();
@@ -343,8 +365,8 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
         RawTowerGeom *tower_geom = geomOH->get_tower_geometry(geomkey);
         ohcalt[sectoroh] = time;
         if(!_dataormc) ohcaladc[sectoroh] = towersOHuc->get_tower_at_channel(i)->get_energy();
-        if (!_datormc) ohcalzs[sectoroh] = towersOHzs->get_tower_at_channel(i)->get_energy();
-        if (_datormc) ohcalzs[sectoroh] = towersOHzs->get_tower_at_channel(i)->get_waveform_value(6) - towersOHzs->get_tower_at_channel(i)->get_waveform_value(0);
+        if (!_dataormc) ohcalzs[sectoroh] = towersOHzs->get_tower_at_channel(i)->get_energy();
+        if (_dataormc) ohcalzs[sectoroh] = towersOHzs->get_tower_at_channel(i)->get_waveform_value(6) - towersOHzs->get_tower_at_channel(i)->get_waveform_value(0);
         ohcalpos[sectoroh][0] = tower_geom->get_center_x();
         ohcalpos[sectoroh][1] = tower_geom->get_center_y();
         ohcalpos[sectoroh][2] = tower_geom->get_center_z();
@@ -395,8 +417,8 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
         RawTowerGeom *tower_geom = geomIH->get_tower_geometry(geomkey);
         ihcalt[sectorih] = time;
         if(!_dataormc) ihcaladc[sectorih] = towersIHuc->get_tower_at_channel(i)->get_energy();
-        if (!_datormc) ihcalzs[sectorih] = towersIHzs->get_tower_at_channel(i)->get_energy();
-        if (_datormc) ihcalzs[sectorih] = towersIHzs->get_tower_at_channel(i)->get_waveform_value(6) - towersIHzs->get_tower_at_channel(i)->get_waveform_value(0);
+        if (!_dataormc) ihcalzs[sectorih] = towersIHzs->get_tower_at_channel(i)->get_energy();
+        if (_dataormc) ihcalzs[sectorih] = towersIHzs->get_tower_at_channel(i)->get_waveform_value(6) - towersIHzs->get_tower_at_channel(i)->get_waveform_value(0);
         ihcalpos[sectorih][0] = tower_geom->get_center_x();
         ihcalpos[sectorih][1] = tower_geom->get_center_y();
         ihcalpos[sectorih][2] = tower_geom->get_center_z();
