@@ -52,6 +52,15 @@ MDCTreeMaker::MDCTreeMaker(const std::string &name, const int dataormc, const in
   _foutname = name;  
   _dataormc = dataormc;
   _debug = debug;
+  for(int i=0; i<96; ++i)
+    {
+      for(int j=0; j<256; ++j)
+	{
+	  hotmap[0][i][j] = 0;
+	  hotmap[1][i][j] = 0;
+	  hotmap[2][i][j] = 0;
+	}
+    }
 }
 
 //____________________________________________________________________________..
@@ -70,7 +79,6 @@ int MDCTreeMaker::Init(PHCompositeNode *topNode)
   _tree = new TTree("ttree","a persevering date tree");
   
   _tree->Branch("track_vtx",track_vtx,"track_vtx[3]/F"); //svtx and mbd vtx
-  _tree->Branch("mbd_vtx",mbd_vtx,"mbd_vtx[3]/F"); //mbd vtx
   _tree->Branch("sectorem",&sectorem,"sectorem/I"); //Number of hit sectors in the emcal
   _tree->Branch("sectorih",&sectorih,"sectorih/I"); // IHcal etc.
   _tree->Branch("sectoroh",&sectoroh,"sectoroh/I");
@@ -104,9 +112,9 @@ int MDCTreeMaker::Init(PHCompositeNode *topNode)
       _tree->Branch("ihishot",ihishot,"ihishot[sectorih]/O");
       _tree->Branch("ohishot",ohishot,"ohishot[sectoroh]/O");
     }
-  _tree->Branch("ihcalpos",ihcalpos,"ihcalpos[sectorih][3]/F"); //position (xyz) of EMCal sector center
-  _tree->Branch("emcalpos",emcalpos,"emcalpos[sectorem][3]/F");
-  _tree->Branch("ohcalpos",ohcalpos,"ohcalpos[sectoroh][3]/F");
+  //_tree->Branch("ihcalpos",ihcalpos,"ihcalpos[sectorih][3]/F"); //position (xyz) of EMCal sector center
+  //_tree->Branch("emcalpos",emcalpos,"emcalpos[sectorem][3]/F");
+  //_tree->Branch("ohcalpos",ohcalpos,"ohcalpos[sectoroh][3]/F");
   _tree->Branch("emetacor",emetacor,"emetacor[sectorem]/F"); //corrected eta value **NOT A BIN INDEX**
   _tree->Branch("ihetacor",ihetacor,"ihetacor[sectorih]/F");
   _tree->Branch("ohetacor",ohetacor,"ohetacor[sectoroh]/F");
@@ -565,6 +573,10 @@ int MDCTreeMaker::End(PHCompositeNode *topNode)
       std::cout << "MDCTreeMaker::End(PHCompositeNode *topNode) This is the End..." << std::endl;
     }
 
+  _f->cd();
+  TTree* outt = new TTree("outt","outt for hotmap");
+  outt->Branch("hotmap",hotmap,"hotmap[3][96][256]/I");
+  outt->Fill();
   _f->Write();
   _f->Close();
 
