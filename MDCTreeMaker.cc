@@ -107,9 +107,6 @@ int MDCTreeMaker::Init(PHCompositeNode *topNode)
       _tree->Branch("emchi2",emchi2,"emchi2[sectorem]/F");
       _tree->Branch("ihchi2",ihchi2,"ihchi2[sectorih]/F");
       _tree->Branch("ohchi2",ohchi2,"ohchi2[sectoroh]/F");
-      _tree->Branch("emishot",emishot,"emishot[sectorem]/O");
-      _tree->Branch("ihishot",ihishot,"ihishot[sectorih]/O");
-      _tree->Branch("ohishot",ohishot,"ohishot[sectoroh]/O");
     }
   _tree->Branch("emetacor",emetacor,"emetacor[sectorem]/F"); //corrected eta value **NOT A BIN INDEX**
   _tree->Branch("ihetacor",ihetacor,"ihetacor[sectorih]/F");
@@ -294,7 +291,8 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
         RawTowerGeom *tower_geom = geomEM->get_tower_geometry(geomkey); //encode tower geometry
         emcalt[sectorem] = time; //store time value
         if(!_dataormc) emcaladc[sectorem] = towersEMuc->get_tower_at_channel(i)->get_energy(); //emcal ADC value (uncalibrated "energy")
-        emcalzs[sectorem] = towersEMzs->get_tower_at_channel(i)->get_energy(); // emcal zero suppressed calibrated value (GeV)
+        if (!_datormc) emcalzs[sectorem] = towersEMzs->get_tower_at_channel(i)->get_energy(); // emcal zero suppressed calibrated value (GeV)
+        if (_datormc) emcalzs[sectorem] = towersEMzs->get_tower_at_channel(i)->get_waveform_value(6) - towersEMzs->get_tower_at_channel(i)->get_waveform_value(0);
         emcalpos[sectorem][0] = tower_geom->get_center_x(); //get positions of towers
         emcalpos[sectorem][1] = tower_geom->get_center_y();
         emcalpos[sectorem][2] = tower_geom->get_center_z();
@@ -345,7 +343,8 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
         RawTowerGeom *tower_geom = geomOH->get_tower_geometry(geomkey);
         ohcalt[sectoroh] = time;
         if(!_dataormc) ohcaladc[sectoroh] = towersOHuc->get_tower_at_channel(i)->get_energy();
-        ohcalzs[sectoroh] = towersOHzs->get_tower_at_channel(i)->get_energy();
+        if (!_datormc) ohcalzs[sectoroh] = towersOHzs->get_tower_at_channel(i)->get_energy();
+        if (_datormc) ohcalzs[sectoroh] = towersOHzs->get_tower_at_channel(i)->get_waveform_value(6) - towersOHzs->get_tower_at_channel(i)->get_waveform_value(0);
         ohcalpos[sectoroh][0] = tower_geom->get_center_x();
         ohcalpos[sectoroh][1] = tower_geom->get_center_y();
         ohcalpos[sectoroh][2] = tower_geom->get_center_z();
@@ -396,7 +395,8 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
         RawTowerGeom *tower_geom = geomIH->get_tower_geometry(geomkey);
         ihcalt[sectorih] = time;
         if(!_dataormc) ihcaladc[sectorih] = towersIHuc->get_tower_at_channel(i)->get_energy();
-        ihcalzs[sectorih] = towersIHzs->get_tower_at_channel(i)->get_energy();
+        if (!_datormc) ihcalzs[sectorih] = towersIHzs->get_tower_at_channel(i)->get_energy();
+        if (_datormc) ihcalzs[sectorih] = towersIHzs->get_tower_at_channel(i)->get_waveform_value(6) - towersIHzs->get_tower_at_channel(i)->get_waveform_value(0);
         ihcalpos[sectorih][0] = tower_geom->get_center_x();
         ihcalpos[sectorih][1] = tower_geom->get_center_y();
         ihcalpos[sectorih][2] = tower_geom->get_center_z();
