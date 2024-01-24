@@ -55,6 +55,9 @@ class MDCTreeMaker : public SubsysReco
   int emcaladc[24576];
   int ihcaladc[1536];
   int ohcaladc[1536];
+  int emcalzsadc[24576];
+  int ihcalzsadc[1536];
+  int ohcalzsadc[1536];
   float emcalzs[24576];
   float ihcalzs[1536];
   float ohcalzs[1536];

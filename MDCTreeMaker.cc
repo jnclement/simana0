@@ -107,6 +107,9 @@ int MDCTreeMaker::Init(PHCompositeNode *topNode)
       _tree->Branch("emcaladc",emcaladc,"emcaladc[sectorem]/I"); //time value of EMCal sector
       _tree->Branch("ihcaladc",ihcaladc,"ihcaladc[sectorih]/I");
       _tree->Branch("ohcaladc",ohcaladc,"ohcaladc[sectoroh]/I");
+      _tree->Branch("emcalzsadc", emcalzsadc, "emcalzsadc[sectorem]/I");
+      _tree->Branch("ihcalzsadc", ihcalzsadc, "ihcalzsadc[sectorih]/I");
+      _tree->Branch("ohcalzsadc", ohcalzsadc, "ohcalzsadc[sectoroh]/I");
       _tree->Branch("emchi2",emchi2,"emchi2[sectorem]/F");
       _tree->Branch("ihchi2",ihchi2,"ihchi2[sectorih]/F");
       _tree->Branch("ohchi2",ohchi2,"ohchi2[sectoroh]/F");
@@ -175,6 +178,15 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
     TowerInfoContainer *towersIHzs = findNode::getClass<TowerInfoContainerv1>(topNode, "TOWERINFO_SZ_CALIB_HCALIN");
     TowerInfoContainer *towersOHzs = findNode::getClass<TowerInfoContainerv1>(topNode, "TOWERINFO_SZ_CALIB_HCALOUT");
 
+    TowerInfoContainerv1 *towersEMuczs; 
+    TowerInfoContainerv1 *towersIHuczs;
+    TowerInfoContainerv1 *towersOHuczs;
+    if (!_dataormc) {
+      towersEMuczs = findNode::getClass<TowerInfoContainerv1>(topNode, "TOWERS_SZ_CEMC");
+      towersIHuczs = findNode::getClass<TowerInfoContainerv1>(topNode, "TOWERS_SZ_HCALIN");
+      towersOHuczs = findNode::getClass<TowerInfoContainerv1>(topNode, "TOWERS_SZ_HCALOUT");
+    }
+
     if(_dataormc) {
       towersEM = findNode::getClass<TowerInfoContainerv1>(topNode, "TOWERINFO_CALIB_CEMC");
       towersIH = findNode::getClass<TowerInfoContainerv1>(topNode, "TOWERINFO_CALIB_HCALIN");
@@ -208,24 +220,25 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
     if(_debug) cout << "EM geomtry node: " << geomEM << endl;
     
     if (_debug) cout << "Getting Centrality and MinimumBiasInfo nodes" << endl;
+    float centile = 0;
     CentralityInfov1 *centrality = findNode::getClass<CentralityInfov1>(topNode, "CentralityInfo");
-    if (!centrality)
+    if (centrality)
     {
-      std::cout << "no centrality node " << std::endl;
-      return Fun4AllReturnCodes::ABORTRUN;
+      centile = (centrality->has_centile(CentralityInfo::PROP::mbd_NS) ? centrality->get_centile(CentralityInfo::PROP::mbd_NS) : -999.99);
+      centbin = centile*100;
+    } else {
+     std::cout << "no centrality node " << std::endl; 
+     //return Fun4AllReturnCodes::ABORTRUN;
     }
 
     MinimumBiasInfo *minimumbiasinfo = findNode::getClass<MinimumBiasInfo>(topNode, "MinimumBiasInfo");
-    if (!minimumbiasinfo)
+    if (minimumbiasinfo)
     {
+      isMinBias = minimumbiasinfo->isAuAuMinimumBias();
+    } else {
       std::cout << "no minimumbias node " << std::endl;
-      return Fun4AllReturnCodes::ABORTRUN;
+      //return Fun4AllReturnCodes::ABORTRUN;
     }
-
-    float centile = (centrality->has_centile(CentralityInfo::PROP::mbd_NS) ? centrality->get_centile(CentralityInfo::PROP::mbd_NS) : -999.99);
-    centbin = centile*100;
-    isMinBias = minimumbiasinfo->isAuAuMinimumBias();
-    if(_debug) cout << "centrality: " << centbin << " is MB: " << isMinBias << endl;
 
     if(_debug) cout << "Getting vertex" << endl;
 
@@ -281,16 +294,16 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
           hotmap[0][etabin][phibin] = 1;
           continue;
         }
-        if(!_dataormc && towersEMuc->get_tower_at_channel(i)->get_energy() == 0) {
-          if(_debug > 1) { cout << "EMCal ADC 0 in tower " << i << endl; }
-            continue;
-        }
+        //if(!_dataormc && towersEMuc->get_tower_at_channel(i)->get_energy() == 0) {
+        //  if(_debug > 1) { cout << "EMCal ADC 0 in tower " << i << endl; }
+        //    continue;
+        //}
         //if (!_dataormc && tower->get_isBadTime()) { continue; } // Use isBadTime instead of timing cut
         float time = towersEM->get_tower_at_channel(i)->get_time_float(); //get time
-        if(!_dataormc && (time > 1 || time < -2)) { // reinstated timing cuts 
-          if(_debug > 2) cout << time << endl;
-          continue; //timing cut
-        }
+        //if(!_dataormc && (time > 1 || time < -2)) { // reinstated timing cuts 
+        //  if(_debug > 2) cout << time << endl;
+        //  continue; //timing cut
+        //}
         // check to see if the tower has a bad chi2 but is not isHot, if so break loop and end this event
         if (!_dataormc && !tower->get_isHot() && tower->get_isBadChi2()) { 
           if (etabin == 13 && phibin == 232) {
@@ -314,6 +327,7 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
         emcalt[sectorem] = time; //store time value
         if(!_dataormc) emcaladc[sectorem] = towersEMuc->get_tower_at_channel(i)->get_energy(); //emcal ADC value (uncalibrated "energy")
         if (!_dataormc) emcalzs[sectorem] = towersEMzs->get_tower_at_channel(i)->get_energy(); // emcal zero suppressed calibrated value (GeV)
+        if (!_dataormc) emcalzsadc[sectorem] = towersEMuczs->get_tower_at_channel(i)->get_energy(); // emcal zero suppressed ADC value
         if (_dataormc) emcalzs[sectorem] = towersEMzs->get_tower_at_channel(i)->get_waveform_value(6) - towersEMzs->get_tower_at_channel(i)->get_waveform_value(0);
         emcalpos[sectorem][0] = tower_geom->get_center_x(); //get positions of towers
         emcalpos[sectorem][1] = tower_geom->get_center_y();
@@ -347,10 +361,10 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
           hotmap[2][etabin][phibin] = 1;
           continue;
         }
-        if(!_dataormc && towersOHuc->get_tower_at_channel(i)->get_energy() == 0) {
-          if(_debug > 1) { cout << "OHCal ADC 0 in tower " << i << endl; }
-          continue;
-        }
+        //if(!_dataormc && towersOHuc->get_tower_at_channel(i)->get_energy() == 0) {
+        //  if(_debug > 1) { cout << "OHCal ADC 0 in tower " << i << endl; }
+        //  continue;
+        //}
         float time = towersOH->get_tower_at_channel(i)->get_time_float();
         //if(!_dataormc && (time > 3.5 || time < -3)) continue; // using no timing cuts
         // check to see if the tower has a bad chi2 but is not isHot, if so break loop and end this event
@@ -366,6 +380,7 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
         ohcalt[sectoroh] = time;
         if(!_dataormc) ohcaladc[sectoroh] = towersOHuc->get_tower_at_channel(i)->get_energy();
         if (!_dataormc) ohcalzs[sectoroh] = towersOHzs->get_tower_at_channel(i)->get_energy();
+        if (!_dataormc) ohcalzsadc[sectoroh] = towersOHuczs->get_tower_at_channel(i)->get_energy();
         if (_dataormc) ohcalzs[sectoroh] = towersOHzs->get_tower_at_channel(i)->get_waveform_value(6) - towersOHzs->get_tower_at_channel(i)->get_waveform_value(0);
         ohcalpos[sectoroh][0] = tower_geom->get_center_x();
         ohcalpos[sectoroh][1] = tower_geom->get_center_y();
@@ -398,10 +413,10 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
           hotmap[1][etabin][phibin] = 1;
           continue;
         }
-        if(!_dataormc && towersIHuc->get_tower_at_channel(i)->get_energy() == 0) {
-          if(_debug > 1) { cout << "IHCal ADC 0 in tower " << i << endl; }
-          continue;
-        }
+        //if(!_dataormc && towersIHuc->get_tower_at_channel(i)->get_energy() == 0) {
+        //  if(_debug > 1) { cout << "IHCal ADC 0 in tower " << i << endl; }
+        //  continue;
+        //}
         float time = towersIH->get_tower_at_channel(i)->get_time_float();
         // if(!_dataormc && (time > 2 || time < -2.5)) continue; // using no timing cuts
         // check to see if the tower has a bad chi2 but not isHot, if so break loop and end this event
@@ -418,6 +433,7 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
         ihcalt[sectorih] = time;
         if(!_dataormc) ihcaladc[sectorih] = towersIHuc->get_tower_at_channel(i)->get_energy();
         if (!_dataormc) ihcalzs[sectorih] = towersIHzs->get_tower_at_channel(i)->get_energy();
+        if (!_dataormc) ihcalzsadc[sectorih] = towersIHuczs->get_tower_at_channel(i)->get_energy(); 
         if (_dataormc) ihcalzs[sectorih] = towersIHzs->get_tower_at_channel(i)->get_waveform_value(6) - towersIHzs->get_tower_at_channel(i)->get_waveform_value(0);
         ihcalpos[sectorih][0] = tower_geom->get_center_x();
         ihcalpos[sectorih][1] = tower_geom->get_center_y();
