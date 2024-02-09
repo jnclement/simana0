@@ -34,7 +34,7 @@ libmdctreemaker_la_LIBADD = \
   libmdctreemaker_io.la \
   -lcalo_io \
   -lSubsysReco -lphg4hit -lffaobjects -lmbd_io \
-  -ljetbase -lglobalvertex
+  -ljetbase -lglobalvertex -lcentrality -lcalotrigger 
 #-lg4jets_io
 %_Dict.cc: %.h %LinkDef.h
 	rootcint -f $@ @CINTDEFS@ $(DEFAULT_INCLUDES) $(AM_CPPFLAGS) $^
