@@ -300,7 +300,7 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
         //}
         //if (!_dataormc && tower->get_isBadTime()) { continue; } // Use isBadTime instead of timing cut
         float time = towersEM->get_tower_at_channel(i)->get_time_float(); //get time
-        //if(!_dataormc && (time > 1 || time < -2)) { // reinstated timing cuts 
+        //if(!_dataormc && (time > 1 || time < -2)) { // timing cuts 
         //  if(_debug > 2) cout << time << endl;
         //  continue; //timing cut
         //}
