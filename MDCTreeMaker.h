@@ -9,6 +9,7 @@
 #include "TFile.h"
 
 class PHCompositeNode;
+class CentralityInfo;
 class MDCTreeMaker : public SubsysReco
 {
  public:
