@@ -30,7 +30,7 @@
 #include <mbd/MbdPmtHit.h>
 #include <jetbackground/TowerBackgroundv1.h>
 #include <cmath>
-
+#include <mbd/MbdOut.h>
 #include <TLorentzVector.h>
 
 #include <gsl/gsl_randist.h>
@@ -221,7 +221,7 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
     if (_debug) cout << "Getting Centrality and MinimumBiasInfo nodes" << endl;
     float centile = 0;
     CentralityInfo *centralityinfo = findNode::getClass<CentralityInfo>(topNode, "CentralityInfo");
-    if (centrality)
+    if (centralityinfo)
     {
       //std::cout << "centralities " << centrality->get_centile(CentralityInfo::PROP::mbd_NS) << " " << centrality->get_centile(CentralityInfo::PROP::bimp) << std::endl;
       centile = (centralityinfo->has_centile(CentralityInfo::PROP::mbd_NS) ? centralityinfo->get_centile(CentralityInfo::PROP::mbd_NS) : -999.99);
@@ -229,7 +229,7 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
       centrality = centile;
       centbin = int(centile*100);
     } else {
-     std::cout << "no centrality node " << std::endl; 
+     std::cout << "no centralityinfo node " << std::endl; 
      return Fun4AllReturnCodes::EVENT_OK;
     }
 
@@ -456,7 +456,13 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
     }
     if(_debug) cout << "Getting MBD info" << endl;
   }
-      
+  /*
+  MbdOut *mbdoutcheck = findNode::getClass<MbdOut>(topNode, "MbdOut");
+  if(_debug)
+    {
+      cout << "MBD N/S charge: " << mbdoutcheck->get_q(1) << "/" << mbdoutcheck->get_q(0) << endl;
+    }
+  */
   MbdPmtContainer *mbdtow = findNode::getClass<MbdPmtContainer>(topNode, "MbdPmtContainer");
   if(!mbdtow)
   {
