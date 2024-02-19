@@ -47,7 +47,7 @@
 using namespace std;
 //____________________________________________________________________________..
 MDCTreeMaker::MDCTreeMaker(const std::string &name, const int dataormc, const int debug, const int correct):
-  SubsysReco((name+"test").c_str())
+  SubsysReco("test")//).c_str())
 {
   _evtct = 0;
   _correct = correct;
@@ -532,20 +532,21 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
       std::vector<int>::iterator apart = find(baryons.begin(), baryons.end(), -truth->get_pid());
       if(parit != baryons.end())
       {
-          truthpar_e[truthpar_n] = truth->get_e() - sqrt(truth->get_e()*truth->get_e()-psquare);
+	truthpar_e[truthpar_n] = truth->get_e() - pmass;
       }
       else if(apart != baryons.end())
       {
-        truthpar_e[truthpar_n] = truth->get_e() - sqrt(truth->get_e()*truth->get_e()-psquare) + 2*pmass;
+        truthpar_e[truthpar_n] = truth->get_e() + pmass;
       }
       else
       {
         truthpar_e[truthpar_n] = truth->get_e();
       }
-      truthpar_sume += truth->get_e();
+      
       truthpar_phi[truthpar_n] = atan2(truth->get_py(), truth->get_px());
       truthpar_eta[truthpar_n] = atanh(truth->get_pz() / sqrt(truth->get_px()*truth->get_px()+truth->get_py()*truth->get_py()+truth->get_pz()*truth->get_pz()));
       if (truthpar_eta[truthpar_n] != truthpar_eta[truthpar_n]) truthpar_eta[truthpar_n] = -999; // check for nans
+      if(abs(truthpar_eta[truthpar_n]) < 1) truthpar_sume += truthpar_e[truthpar_n];
       truthpar_n++;
       if(truthpar_n > 99999)
       {
@@ -594,6 +595,7 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
   if (_dataormc || goodevent) _tree->Fill();
   if(_debug)
   {
+    cout << "Total truth particles: " << truthpar_n << endl;
       cout << "Total truth E |eta|<1: " << truthpar_sume << endl;
       cout << "Total mbd q: " << mbdq << endl;
       cout << "npart: " << npart << endl;
