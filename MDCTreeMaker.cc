@@ -78,6 +78,7 @@ int MDCTreeMaker::Init(PHCompositeNode *topNode)
   
   _tree = new TTree("ttree","a persevering date tree");
   
+  _tree->Branch("centrality",&centrality,"centrality/F");
   _tree->Branch("track_vtx",track_vtx,"track_vtx[3]/F"); //svtx and mbd vtx
   _tree->Branch("sectorem",&sectorem,"sectorem/I"); //Number of hit sectors in the emcal
   _tree->Branch("sectorih",&sectorih,"sectorih/I"); // IHcal etc.
@@ -199,8 +200,6 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
       towersOHzs = findNode::getClass<TowerInfoContainerv3>(topNode, "WAVEFORMS_HCALOUT");
     }
 
-    
-
     if(_debug) cout << "Checking that all necessary objects exist" << endl;
     if(!towersEM || !towersIH || !towersOH || !geomEM || !geomIH || !geomOH)
     {
@@ -221,16 +220,17 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
     
     if (_debug) cout << "Getting Centrality and MinimumBiasInfo nodes" << endl;
     float centile = 0;
-    CentralityInfo *centrality = findNode::getClass<CentralityInfo>(topNode, "CentralityInfo");
+    CentralityInfo *centralityinfo = findNode::getClass<CentralityInfo>(topNode, "CentralityInfo");
     if (centrality)
     {
       //std::cout << "centralities " << centrality->get_centile(CentralityInfo::PROP::mbd_NS) << " " << centrality->get_centile(CentralityInfo::PROP::bimp) << std::endl;
-      centile = (centrality->has_centile(CentralityInfo::PROP::mbd_NS) ? centrality->get_centile(CentralityInfo::PROP::mbd_NS) : -999.99);
-      //std::cout << "centrality centile " << centile << std::endl;
+      centile = (centralityinfo->has_centile(CentralityInfo::PROP::mbd_NS) ? centralityinfo->get_centile(CentralityInfo::PROP::mbd_NS) : -999.99);
+      if(_debug) std::cout << "centrality centile " << centile << std::endl;
+      centrality = centile;
       centbin = int(centile*100);
     } else {
      std::cout << "no centrality node " << std::endl; 
-     //return Fun4AllReturnCodes::ABORTRUN;
+     return Fun4AllReturnCodes::EVENT_OK;
     }
 
     MinimumBiasInfo *minimumbiasinfo = findNode::getClass<MinimumBiasInfo>(topNode, "MinimumBiasInfo");
