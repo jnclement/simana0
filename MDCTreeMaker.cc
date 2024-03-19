@@ -538,11 +538,11 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
       std::vector<int>::iterator apart = find(baryons.begin(), baryons.end(), -truth->get_pid());
       if(parit != baryons.end())
       {
-	truthpar_e[truthpar_n] = truth->get_e() - pmass;
+	truthpar_e[truthpar_n] = truth->get_e() - sqrt(truth->get_e()*truth->get_e()-psquare);
       }
       else if(apart != baryons.end())
       {
-        truthpar_e[truthpar_n] = truth->get_e() + pmass;
+        truthpar_e[truthpar_n] = truth->get_e() - sqrt(truth->get_e()*truth->get_e()-psquare) + 2*pmass;
       }
       else
       {
